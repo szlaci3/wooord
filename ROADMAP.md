@@ -164,6 +164,8 @@ Stop after this milestone.
 
 ## Milestone 3: Vocabulary Parser
 
+Status: Complete.
+
 Goal: parse pasted Dutch-Chinese vocabulary text.
 
 Build:
