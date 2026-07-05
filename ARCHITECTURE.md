@@ -215,6 +215,12 @@ export type VocabularyEntry = {
 
 Create one Dexie database for the app.
 
+Current implementation:
+
+* `src/db/db.ts` exports `WooordDatabase` and the shared `db` instance.
+* The database name is `wooord-db`.
+* Version 1 contains `folders`, `files`, and `entries`.
+
 Suggested database name:
 
 ```txt id="a82w6y"
@@ -262,6 +268,12 @@ export const db = new WooordDatabase();
 ## Repository Layer
 
 Use repository functions to isolate Dexie access from React components.
+
+Current implementation:
+
+* `src/db/vocabularyRepository.ts` creates folders and vocabulary files.
+* The repository lists folders and files, reads one file with ordered entries, and updates file metadata or entries inside Dexie transactions where needed.
+* Shared domain types live in `src/features/files/types.ts`.
 
 Recommended file:
 

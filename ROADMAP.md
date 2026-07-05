@@ -96,6 +96,8 @@ Stop after this milestone.
 
 ## Milestone 2: Dexie Database and Domain Types
 
+Status: Complete.
+
 Goal: create the local persistence layer.
 
 Build:
