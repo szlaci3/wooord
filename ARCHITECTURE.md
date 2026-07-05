@@ -676,6 +676,12 @@ files
 entries
 ```
 
+Current implementation:
+
+* `src/features/data/databaseExportImport.ts` validates compatible exports before replacement.
+* `replaceWooordDatabase` clears and imports `entries`, `files`, and `folders` inside one Dexie transaction.
+* `src/features/data/DataPage.tsx` asks for confirmation with the required replacement warning before calling the replace import.
+
 ---
 
 ## Import: Add Existing Database / Merge

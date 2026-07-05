@@ -1,10 +1,16 @@
-import { useState } from 'react';
+import { type ChangeEvent, useRef, useState } from 'react';
 import { routes } from '../../app/routes';
-import { downloadWooordDatabaseExport } from './databaseExportImport';
+import {
+  downloadWooordDatabaseExport,
+  readWooordExportFile,
+  replaceWooordDatabase,
+} from './databaseExportImport';
 
 export function DataPage() {
+  const replaceInputRef = useRef<HTMLInputElement | null>(null);
   const [message, setMessage] = useState('');
   const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
 
   async function handleExport() {
     if (isExporting) {
@@ -21,6 +27,42 @@ export function DataPage() {
       setMessage('The database could not be exported. Try again.');
     } finally {
       setIsExporting(false);
+    }
+  }
+
+  function handleReplaceClick() {
+    replaceInputRef.current?.click();
+  }
+
+  async function handleReplaceFile(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    event.target.value = '';
+
+    if (!file || isImporting) {
+      return;
+    }
+
+    setIsImporting(true);
+    setMessage('');
+
+    try {
+      const backup = await readWooordExportFile(file);
+      const confirmed = window.confirm(
+        'This will replace all current wooord data on this device. Continue?',
+      );
+
+      if (!confirmed) {
+        setMessage('Import canceled. Current data was not changed.');
+        return;
+      }
+
+      await replaceWooordDatabase(backup);
+      setMessage('Database import complete.');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Import failed.');
+    } finally {
+      setIsImporting(false);
     }
   }
 
@@ -43,10 +85,25 @@ export function DataPage() {
             className="data-action-button"
             type="button"
             onClick={handleExport}
-            disabled={isExporting}
+            disabled={isExporting || isImporting}
           >
             Export database
           </button>
+          <button
+            className="data-action-button data-action-danger"
+            type="button"
+            onClick={handleReplaceClick}
+            disabled={isExporting || isImporting}
+          >
+            Import database, replace current data
+          </button>
+          <input
+            ref={replaceInputRef}
+            className="sr-only"
+            type="file"
+            accept="application/json,.json"
+            onChange={handleReplaceFile}
+          />
         </div>
 
         {message ? <p className="form-message">{message}</p> : null}

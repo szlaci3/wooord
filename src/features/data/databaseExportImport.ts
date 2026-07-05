@@ -1,5 +1,6 @@
 import { db } from '../../db/db';
 import type { WooordDatabaseExport } from './types';
+import type { Folder, VocabularyEntry, VocabularyFile } from '../files/types';
 
 function formatLocalDate(date: Date) {
   const year = date.getFullYear();
@@ -43,4 +44,133 @@ export async function downloadWooordDatabaseExport() {
   link.download = createBackupFilename();
   link.click();
   URL.revokeObjectURL(url);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isString(value: unknown): value is string {
+  return typeof value === 'string';
+}
+
+function isFolder(value: unknown): value is Folder {
+  return (
+    isRecord(value) &&
+    isString(value.id) &&
+    isString(value.name) &&
+    isString(value.createdAt) &&
+    isString(value.updatedAt)
+  );
+}
+
+function isVocabularyFile(value: unknown): value is VocabularyFile {
+  return (
+    isRecord(value) &&
+    isString(value.id) &&
+    isString(value.title) &&
+    (value.folderId === undefined ||
+      value.folderId === null ||
+      isString(value.folderId)) &&
+    isString(value.createdAt) &&
+    isString(value.updatedAt)
+  );
+}
+
+function isVocabularyEntry(value: unknown): value is VocabularyEntry {
+  return (
+    isRecord(value) &&
+    isString(value.id) &&
+    isString(value.fileId) &&
+    isString(value.dutch) &&
+    isString(value.chinese) &&
+    typeof value.order === 'number'
+  );
+}
+
+export function validateWooordDatabaseExport(
+  value: unknown,
+): WooordDatabaseExport {
+  if (!isRecord(value)) {
+    throw new Error('Backup file must contain a JSON object.');
+  }
+
+  if (value.app !== 'wooord' || value.version !== 1) {
+    throw new Error('Backup file is not a compatible wooord export.');
+  }
+
+  if (!isString(value.exportedAt) || !isRecord(value.data)) {
+    throw new Error('Backup file is missing export metadata.');
+  }
+
+  const { folders, files, entries } = value.data;
+
+  if (
+    !Array.isArray(folders) ||
+    !Array.isArray(files) ||
+    !Array.isArray(entries) ||
+    !folders.every(isFolder) ||
+    !files.every(isVocabularyFile) ||
+    !entries.every(isVocabularyEntry)
+  ) {
+    throw new Error('Backup file contains malformed wooord data.');
+  }
+
+  const folderIds = new Set(folders.map((folder) => folder.id));
+  const fileIds = new Set(files.map((file) => file.id));
+
+  for (const file of files) {
+    if (file.folderId && !folderIds.has(file.folderId)) {
+      throw new Error('Backup file contains a file with an unknown folder.');
+    }
+  }
+
+  for (const entry of entries) {
+    if (!fileIds.has(entry.fileId)) {
+      throw new Error('Backup file contains an entry with an unknown file.');
+    }
+  }
+
+  return {
+    app: 'wooord',
+    version: 1,
+    exportedAt: value.exportedAt,
+    data: {
+      folders,
+      files,
+      entries,
+    },
+  };
+}
+
+export async function readWooordExportFile(file: File) {
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(await file.text());
+  } catch {
+    throw new Error('Selected file is not valid JSON.');
+  }
+
+  return validateWooordDatabaseExport(parsed);
+}
+
+export async function replaceWooordDatabase(backup: WooordDatabaseExport) {
+  await db.transaction('rw', db.folders, db.files, db.entries, async () => {
+    await db.entries.clear();
+    await db.files.clear();
+    await db.folders.clear();
+
+    if (backup.data.folders.length > 0) {
+      await db.folders.bulkAdd(backup.data.folders);
+    }
+
+    if (backup.data.files.length > 0) {
+      await db.files.bulkAdd(backup.data.files);
+    }
+
+    if (backup.data.entries.length > 0) {
+      await db.entries.bulkAdd(backup.data.entries);
+    }
+  });
 }

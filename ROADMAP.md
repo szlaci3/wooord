@@ -499,6 +499,8 @@ Stop after this milestone.
 
 ## Milestone 10: Import Database, Replace Current Data
 
+Status: Complete.
+
 Goal: import a backup and replace the current local database.
 
 Add button:
