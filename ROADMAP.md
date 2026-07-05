@@ -359,6 +359,8 @@ Stop after this milestone.
 
 ## Milestone 7: Edit Existing File
 
+Status: Complete.
+
 Goal: allow user to edit saved files.
 
 Build one of these:

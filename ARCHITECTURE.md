@@ -522,6 +522,12 @@ When saving edited entries, use a Dexie transaction:
 * delete old entries for that file
 * insert new entries
 
+Current implementation:
+
+* `src/features/files/FileViewPage.tsx` contains the first edit mode.
+* View mode shows a top edit icon; edit mode swaps it for a top save icon.
+* Edit mode allows title editing and raw vocabulary text editing, then reparses and saves through `updateVocabularyFile`.
+
 ---
 
 ## Folders

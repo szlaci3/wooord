@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { routes } from '../../app/routes';
-import { getVocabularyFile } from '../../db/vocabularyRepository';
+import {
+  getVocabularyFile,
+  updateVocabularyFile,
+} from '../../db/vocabularyRepository';
+import { parseVocabulary } from './parseVocabulary';
 import { speakChinese } from './speech';
 import type { VocabularyFileWithEntries } from './types';
 
@@ -34,11 +38,35 @@ function SpeakerIcon() {
   );
 }
 
+function SaveIcon() {
+  return (
+    <svg
+      className="button-icon"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M5 3h12l2 2v16H5V3Zm2 2v14h10V6.2L15.8 5H15v5H8V5H7Zm3 0v3h3V5h-3Zm-1 9h6v2H9v-2Z" />
+    </svg>
+  );
+}
+
+function entriesToRawText(fileData: VocabularyFileWithEntries) {
+  return fileData.entries
+    .map((entry) => `${entry.dutch}  ${entry.chinese}`)
+    .join('\n');
+}
+
 export function FileViewPage({ fileId }: FileViewPageProps) {
   const [fileData, setFileData] = useState<VocabularyFileWithEntries | null>(
     null,
   );
   const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [titleDraft, setTitleDraft] = useState('');
+  const [rawDraft, setRawDraft] = useState('');
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     let isMounted = true;
@@ -49,6 +77,8 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
       if (isMounted) {
         setFileData(savedFile);
         setIsLoading(false);
+        setIsEditing(false);
+        setMessage('');
       }
     }
 
@@ -59,6 +89,57 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
     };
   }, [fileId]);
 
+  function enterEditMode() {
+    if (!fileData) {
+      return;
+    }
+
+    setTitleDraft(fileData.file.title);
+    setRawDraft(entriesToRawText(fileData));
+    setMessage('');
+    setIsEditing(true);
+  }
+
+  async function saveEdit() {
+    if (!fileData || isSaving) {
+      return;
+    }
+
+    const parsed = parseVocabulary(rawDraft);
+
+    if (!titleDraft.trim()) {
+      setMessage('Add a file title before saving.');
+      return;
+    }
+
+    if (parsed.entries.length === 0) {
+      setMessage('Keep at least one valid Dutch-Chinese vocabulary line.');
+      return;
+    }
+
+    setIsSaving(true);
+    setMessage('');
+
+    try {
+      const updatedFile = await updateVocabularyFile(fileData.file.id, {
+        title: titleDraft.trim(),
+        entries: parsed.entries,
+      });
+
+      if (!updatedFile) {
+        setMessage('This file was not found.');
+        return;
+      }
+
+      setFileData(updatedFile);
+      setIsEditing(false);
+    } catch {
+      setMessage('The file could not be saved. Try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   return (
     <main className="app-shell">
       <header className="page-header">
@@ -68,49 +149,81 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
         <p className="eyebrow">File</p>
       </header>
 
-      <section className="content-card" aria-labelledby="file-heading">
+      <section className="content-card" aria-label="File">
         {isLoading ? (
           <p className="empty-state">Loading file...</p>
         ) : fileData ? (
           <>
             <div className="top-action-row">
-              <h1 id="file-heading" className="page-title">
-                {fileData.file.title}
-              </h1>
+              {isEditing ? (
+                <div className="edit-title-field">
+                  <label className="field-label" htmlFor="file-title">
+                    File title
+                  </label>
+                  <input
+                    id="file-title"
+                    className="title-input"
+                    value={titleDraft}
+                    onChange={(event) => setTitleDraft(event.target.value)}
+                  />
+                </div>
+              ) : (
+                <h1 id="file-heading" className="page-title">
+                  {fileData.file.title}
+                </h1>
+              )}
               <button
                 className="icon-button icon-button-secondary"
                 type="button"
-                aria-label="Edit file"
-                disabled
+                aria-label={isEditing ? 'Save file' : 'Edit file'}
+                disabled={isSaving}
+                onClick={isEditing ? saveEdit : enterEditMode}
               >
-                <EditIcon />
+                {isEditing ? <SaveIcon /> : <EditIcon />}
               </button>
             </div>
 
-            <ol className="entry-list">
-              {fileData.entries.map((entry) => (
-                <li key={entry.id} className="entry-item">
-                  <span className="entry-dutch">{entry.dutch}</span>
-                  <div className="entry-chinese-row">
-                    <button
-                      className="entry-chinese-button"
-                      type="button"
-                      onClick={() => speakChinese(entry.chinese)}
-                    >
-                      {entry.chinese}
-                    </button>
-                    <button
-                      className="entry-audio-button"
-                      type="button"
-                      aria-label={`Play Chinese translation: ${entry.chinese}`}
-                      onClick={() => speakChinese(entry.chinese)}
-                    >
-                      <SpeakerIcon />
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ol>
+            {message ? <p className="form-message">{message}</p> : null}
+
+            {isEditing ? (
+              <div className="edit-content-field">
+                <label className="field-label" htmlFor="file-content">
+                  Vocabulary text
+                </label>
+                <textarea
+                  id="file-content"
+                  className="vocabulary-textarea"
+                  value={rawDraft}
+                  onChange={(event) => setRawDraft(event.target.value)}
+                  rows={12}
+                />
+              </div>
+            ) : (
+              <ol className="entry-list">
+                {fileData.entries.map((entry) => (
+                  <li key={entry.id} className="entry-item">
+                    <span className="entry-dutch">{entry.dutch}</span>
+                    <div className="entry-chinese-row">
+                      <button
+                        className="entry-chinese-button"
+                        type="button"
+                        onClick={() => speakChinese(entry.chinese)}
+                      >
+                        {entry.chinese}
+                      </button>
+                      <button
+                        className="entry-audio-button"
+                        type="button"
+                        aria-label={`Play Chinese translation: ${entry.chinese}`}
+                        onClick={() => speakChinese(entry.chinese)}
+                      >
+                        <SpeakerIcon />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            )}
           </>
         ) : (
           <p className="empty-state">This file was not found.</p>
