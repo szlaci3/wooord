@@ -53,7 +53,7 @@ Current implementation:
 
 * `src/app/routes.ts` defines the initial route constants.
 * `src/app/App.tsx` uses a lightweight path resolver for the first app shell.
-* `/`, `/files/new`, and `/data` render inspectable shell or placeholder views.
+* `/`, `/files/new`, `/files/:fileId`, and `/data` render inspectable shell or feature views.
 
 A dedicated router library can be added later if route complexity justifies it.
 
@@ -341,6 +341,12 @@ natuurlijk — 2026-07-05
 ```
 
 Use local date for the title.
+
+Current implementation:
+
+* `src/features/files/NewFilePage.tsx` renders the paste form and icon-only save action.
+* The page parses pasted text, rejects empty or invalid input, generates `[first Dutch word] — YYYY-MM-DD`, saves through `createVocabularyFile`, and navigates to `/files/:fileId`.
+* `src/features/files/FileSavedPage.tsx` is a minimal saved-file target route that confirms the saved title and ordered entries.
 
 ---
 

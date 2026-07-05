@@ -226,6 +226,8 @@ Stop after this milestone.
 
 ## Milestone 4: Create and Save Files
 
+Status: Complete.
+
 Goal: allow user to paste vocabulary text and save it as a file.
 
 Build:

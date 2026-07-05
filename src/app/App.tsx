@@ -1,28 +1,19 @@
 import { getCurrentRoute, routes } from './routes';
+import { FileSavedPage } from '../features/files/FileSavedPage';
+import { NewFilePage } from '../features/files/NewFilePage';
 
 function App() {
   const currentRoute = getCurrentRoute(window.location.pathname);
 
-  if (currentRoute === routes.newFile) {
-    return (
-      <main className="app-shell">
-        <header className="page-header">
-          <a className="back-link" href={routes.home}>
-            wooord
-          </a>
-          <p className="eyebrow">New file</p>
-        </header>
-        <section className="content-card" aria-labelledby="new-file-heading">
-          <h1 id="new-file-heading" className="page-title">
-            Paste vocabulary
-          </h1>
-          <p className="empty-state">The paste form is not available yet.</p>
-        </section>
-      </main>
-    );
+  if (currentRoute.name === 'newFile') {
+    return <NewFilePage />;
   }
 
-  if (currentRoute === routes.data) {
+  if (currentRoute.name === 'file') {
+    return <FileSavedPage fileId={currentRoute.fileId} />;
+  }
+
+  if (currentRoute.name === 'data') {
     return (
       <main className="app-shell">
         <header className="page-header">
