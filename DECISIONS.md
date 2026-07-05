@@ -526,3 +526,21 @@ Reason:
 * this is a learning and utility app
 * a small complete app is more valuable than a large unfinished one
 * Codex should work milestone by milestone
+
+---
+
+## Decision 19: Start With Lightweight Route Constants
+
+The first app shell uses route constants and a small path resolver instead of a routing library.
+
+Reason:
+
+* Milestone 1 only needs a basic route structure
+* the app has very few initial routes
+* this keeps the first shell simple and runnable
+
+Implications:
+
+* `src/app/routes.ts` owns the route paths
+* `src/app/App.tsx` renders the current shell view from `window.location.pathname`
+* a router library can be introduced later if nested routes or navigation state become worth the dependency

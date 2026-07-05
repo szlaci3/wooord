@@ -31,6 +31,8 @@ After finishing, stop and wait for the next `continue` instruction.
 
 ## Milestone 1: Project Setup and App Shell
 
+Status: Complete.
+
 Goal: create the foundation of the app.
 
 Build:

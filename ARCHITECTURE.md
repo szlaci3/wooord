@@ -49,6 +49,14 @@ The app is small enough to start with React local state plus repository function
 
 The app should use client-side routing.
 
+Current implementation:
+
+* `src/app/routes.ts` defines the initial route constants.
+* `src/app/App.tsx` uses a lightweight path resolver for the first app shell.
+* `/`, `/files/new`, and `/data` render inspectable shell or placeholder views.
+
+A dedicated router library can be added later if route complexity justifies it.
+
 Suggested routes:
 
 ```txt id="yawx2u"
