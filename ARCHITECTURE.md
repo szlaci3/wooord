@@ -55,6 +55,7 @@ Current implementation:
 * `src/app/App.tsx` uses a lightweight path resolver for the first app shell.
 * `/`, `/files/new`, `/files/:fileId`, and `/data` render inspectable shell or feature views.
 * `src/features/files/FileListPage.tsx` owns the landing page file and folder lists.
+* `src/features/files/FileViewPage.tsx` owns the opened file view and listenable Chinese entries.
 
 A dedicated router library can be added later if route complexity justifies it.
 
@@ -347,7 +348,6 @@ Current implementation:
 
 * `src/features/files/NewFilePage.tsx` renders the paste form and icon-only save action.
 * The page parses pasted text, rejects empty or invalid input, generates `[first Dutch word] — YYYY-MM-DD`, saves through `createVocabularyFile`, and navigates to `/files/:fileId`.
-* `src/features/files/FileSavedPage.tsx` is a minimal saved-file target route that confirms the saved title and ordered entries.
 
 ---
 
@@ -491,6 +491,12 @@ export function speakChinese(text: string) {
 Do not make audio failure fatal.
 
 The app should remain usable even if speech synthesis is unavailable.
+
+Current implementation:
+
+* `src/features/files/speech.ts` exports `speakChinese`.
+* `src/features/files/FileViewPage.tsx` calls `speakChinese` from the Chinese text and speaker icon.
+* The opened file view shows a small top edit icon; edit behavior is implemented in the edit milestone.
 
 ---
 

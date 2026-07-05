@@ -309,6 +309,8 @@ Stop after this milestone.
 
 ## Milestone 6: Open File and Listen to Chinese
 
+Status: Complete.
+
 Goal: display a saved file and make Chinese translations audible.
 
 Build:

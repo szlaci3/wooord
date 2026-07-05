@@ -121,6 +121,11 @@ a {
   opacity: 0.65;
 }
 
+.icon-button-secondary {
+  background: var(--color-primary-soft);
+  color: var(--color-text);
+}
+
 .button-icon {
   width: 24px;
   height: 24px;
@@ -225,6 +230,61 @@ h2 {
 .preview-list strong {
   color: var(--color-text);
   font-size: 1.15rem;
+}
+
+.entry-list {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entry-item {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-primary-soft);
+}
+
+.entry-dutch {
+  color: var(--color-text-muted);
+  font-size: 1rem;
+}
+
+.entry-chinese-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.entry-chinese-button,
+.entry-audio-button {
+  min-height: 48px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.entry-chinese-button {
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 1.3rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.entry-audio-button {
+  width: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
 }
 
 .quick-actions {

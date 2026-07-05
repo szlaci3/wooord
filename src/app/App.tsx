@@ -1,6 +1,6 @@
 import { getCurrentRoute, routes } from './routes';
-import { FileSavedPage } from '../features/files/FileSavedPage';
 import { FileListPage } from '../features/files/FileListPage';
+import { FileViewPage } from '../features/files/FileViewPage';
 import { NewFilePage } from '../features/files/NewFilePage';
 
 function App() {
@@ -11,7 +11,7 @@ function App() {
   }
 
   if (currentRoute.name === 'file') {
-    return <FileSavedPage fileId={currentRoute.fileId} />;
+    return <FileViewPage fileId={currentRoute.fileId} />;
   }
 
   if (currentRoute.name === 'data') {
