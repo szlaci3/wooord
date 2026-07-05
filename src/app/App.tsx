@@ -1,8 +1,9 @@
-import { getCurrentRoute, routes } from './routes';
+import { getCurrentRoute } from './routes';
 import { FileListPage } from '../features/files/FileListPage';
 import { FileViewPage } from '../features/files/FileViewPage';
 import { NewFilePage } from '../features/files/NewFilePage';
 import { FolderFilesPage } from '../features/folders/FolderFilesPage';
+import { DataPage } from '../features/data/DataPage';
 
 function App() {
   const currentRoute = getCurrentRoute(window.location.pathname);
@@ -20,22 +21,7 @@ function App() {
   }
 
   if (currentRoute.name === 'data') {
-    return (
-      <main className="app-shell">
-        <header className="page-header">
-          <a className="back-link" href={routes.home}>
-            wooord
-          </a>
-          <p className="eyebrow">Data</p>
-        </header>
-        <section className="content-card" aria-labelledby="data-heading">
-          <h1 id="data-heading" className="page-title">
-            Local data
-          </h1>
-          <p className="empty-state">Data tools are not available yet.</p>
-        </section>
-      </main>
-    );
+    return <DataPage />;
   }
 
   return <FileListPage />;

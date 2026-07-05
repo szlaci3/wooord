@@ -589,6 +589,12 @@ Unlike edit/save actions, these should be text buttons because the meaning is im
 
 The Data page should be reachable from the landing page or top navigation.
 
+Current implementation:
+
+* `src/features/data/DataPage.tsx` owns the `/data` route.
+* Milestone 9 implements the `Export database` action.
+* Import and merge actions are implemented in later Data milestones.
+
 ---
 
 ## Export Format
@@ -624,6 +630,12 @@ Export should:
 6. trigger browser download
 
 This should not require a backend.
+
+Current implementation:
+
+* `src/features/data/databaseExportImport.ts` builds and downloads the JSON export.
+* `src/features/data/types.ts` defines `WooordDatabaseExport`.
+* Export reads `folders`, `files`, and `entries` from Dexie and downloads `wooord-backup-YYYY-MM-DD.json`.
 
 ---
 
