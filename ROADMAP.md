@@ -276,6 +276,8 @@ Stop after this milestone.
 
 ## Milestone 5: Landing Page File List
 
+Status: Complete.
+
 Goal: show saved files on the landing page.
 
 Build landing page with:

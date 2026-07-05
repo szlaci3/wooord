@@ -33,6 +33,10 @@ select {
   font: inherit;
 }
 
+button {
+  color: inherit;
+}
+
 a {
   color: inherit;
 }
@@ -241,6 +245,15 @@ h2 {
   text-decoration: none;
 }
 
+.action-button {
+  border: 0;
+}
+
+.action-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 .primary-action {
   background: var(--color-primary);
   color: var(--color-bg);
@@ -279,6 +292,42 @@ h2 {
   border-radius: 8px;
   color: var(--color-text-muted);
   background: var(--color-surface);
+}
+
+.file-list,
+.folder-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.file-list-link,
+.folder-list li {
+  display: grid;
+  gap: 6px;
+  min-height: 64px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+}
+
+.file-list-link {
+  text-decoration: none;
+}
+
+.file-list-title,
+.folder-list span {
+  color: var(--color-text);
+  font-size: 1.08rem;
+  font-weight: 700;
+}
+
+.file-list-meta,
+.folder-list small {
+  color: var(--color-text-muted);
 }
 
 @media (min-width: 560px) {

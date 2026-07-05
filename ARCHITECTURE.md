@@ -54,6 +54,7 @@ Current implementation:
 * `src/app/routes.ts` defines the initial route constants.
 * `src/app/App.tsx` uses a lightweight path resolver for the first app shell.
 * `/`, `/files/new`, `/files/:fileId`, and `/data` render inspectable shell or feature views.
+* `src/features/files/FileListPage.tsx` owns the landing page file and folder lists.
 
 A dedicated router library can be added later if route complexity justifies it.
 

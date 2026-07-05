@@ -1,5 +1,6 @@
 import { getCurrentRoute, routes } from './routes';
 import { FileSavedPage } from '../features/files/FileSavedPage';
+import { FileListPage } from '../features/files/FileListPage';
 import { NewFilePage } from '../features/files/NewFilePage';
 
 function App() {
@@ -32,39 +33,7 @@ function App() {
     );
   }
 
-  return (
-    <main className="app-shell">
-      <section className="home-panel" aria-labelledby="app-title">
-        <p className="eyebrow">Dutch - Chinese vocabulary</p>
-        <h1 id="app-title">wooord</h1>
-        <p className="intro">
-          Local Dutch-Chinese vocabulary files for review and listening.
-        </p>
-
-        <nav className="quick-actions" aria-label="Primary">
-          <a className="primary-action" href={routes.newFile}>
-            New file
-          </a>
-          <a className="secondary-action" href={routes.data}>
-            Data
-          </a>
-        </nav>
-      </section>
-
-      <section className="content-section" aria-labelledby="files-heading">
-        <div className="section-heading">
-          <h2 id="files-heading">Files</h2>
-          <a className="text-link" href={routes.newFile}>
-            Create
-          </a>
-        </div>
-        <p className="empty-state">
-          No vocabulary files yet. Create a file to start building your local
-          study list.
-        </p>
-      </section>
-    </main>
-  );
+  return <FileListPage />;
 }
 
 export default App;
