@@ -409,6 +409,8 @@ Stop after this milestone.
 
 ## Milestone 8: Folders
 
+Status: Complete.
+
 Goal: organize files into folders.
 
 Build:

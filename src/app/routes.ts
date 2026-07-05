@@ -3,13 +3,15 @@ export const routes = {
   newFile: '/files/new',
   data: '/data',
   file: (fileId: string) => `/files/${fileId}`,
+  folder: (folderId: string) => `/folders/${folderId}`,
 } as const;
 
 export type AppRoute =
   | { name: 'home' }
   | { name: 'newFile' }
   | { name: 'data' }
-  | { name: 'file'; fileId: string };
+  | { name: 'file'; fileId: string }
+  | { name: 'folder'; folderId: string };
 
 export function getCurrentRoute(pathname: string): AppRoute {
   if (pathname === routes.newFile) {
@@ -25,6 +27,14 @@ export function getCurrentRoute(pathname: string): AppRoute {
 
     if (fileId) {
       return { name: 'file', fileId };
+    }
+  }
+
+  if (pathname.startsWith('/folders/')) {
+    const folderId = pathname.slice('/folders/'.length);
+
+    if (folderId) {
+      return { name: 'folder', folderId };
     }
   }
 

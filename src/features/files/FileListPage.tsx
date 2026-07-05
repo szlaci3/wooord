@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { routes } from '../../app/routes';
 import {
+  createFolder,
   listFolders,
   listVocabularyFiles,
 } from '../../db/vocabularyRepository';
@@ -19,6 +20,7 @@ export function FileListPage() {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [folderName, setFolderName] = useState('');
 
   useEffect(() => {
     let isMounted = true;
@@ -56,6 +58,27 @@ export function FileListPage() {
     return new Map(folders.map((folder) => [folder.id, folder.name]));
   }, [folders]);
 
+  async function handleCreateFolder(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const trimmedName = folderName.trim();
+
+    if (!trimmedName) {
+      setMessage('Add a folder name before saving.');
+      return;
+    }
+
+    try {
+      const folder = await createFolder(trimmedName);
+
+      setFolders((currentFolders) => [...currentFolders, folder]);
+      setFolderName('');
+      setMessage('');
+    } catch {
+      setMessage('The folder could not be created. Try again.');
+    }
+  }
+
   return (
     <main className="app-shell">
       <section className="home-panel" aria-labelledby="app-title">
@@ -69,13 +92,6 @@ export function FileListPage() {
           <a className="primary-action" href={routes.newFile}>
             New file
           </a>
-          <button
-            className="secondary-action action-button"
-            type="button"
-            disabled
-          >
-            New folder
-          </button>
           <a className="secondary-action" href={routes.data}>
             Data
           </a>
@@ -83,6 +99,27 @@ export function FileListPage() {
       </section>
 
       {message ? <p className="form-message">{message}</p> : null}
+
+      <section className="content-section" aria-labelledby="new-folder-heading">
+        <div className="section-heading">
+          <h2 id="new-folder-heading">New folder</h2>
+        </div>
+        <form className="inline-form" onSubmit={handleCreateFolder}>
+          <label className="sr-only" htmlFor="folder-name">
+            Folder name
+          </label>
+          <input
+            id="folder-name"
+            className="text-input"
+            value={folderName}
+            onChange={(event) => setFolderName(event.target.value)}
+            placeholder="Folder name"
+          />
+          <button className="secondary-action action-button" type="submit">
+            Create
+          </button>
+        </form>
+      </section>
 
       {folders.length > 0 ? (
         <section className="content-section" aria-labelledby="folders-heading">
@@ -92,8 +129,10 @@ export function FileListPage() {
           <ul className="folder-list">
             {folders.map((folder) => (
               <li key={folder.id}>
-                <span>{folder.name}</span>
-                <small>{formatDisplayDate(folder.updatedAt)}</small>
+                <a className="folder-list-link" href={routes.folder(folder.id)}>
+                  <span>{folder.name}</span>
+                  <small>{formatDisplayDate(folder.updatedAt)}</small>
+                </a>
               </li>
             ))}
           </ul>

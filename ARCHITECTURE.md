@@ -53,9 +53,10 @@ Current implementation:
 
 * `src/app/routes.ts` defines the initial route constants.
 * `src/app/App.tsx` uses a lightweight path resolver for the first app shell.
-* `/`, `/files/new`, `/files/:fileId`, and `/data` render inspectable shell or feature views.
+* `/`, `/files/new`, `/files/:fileId`, `/folders/:folderId`, and `/data` render inspectable shell or feature views.
 * `src/features/files/FileListPage.tsx` owns the landing page file and folder lists.
 * `src/features/files/FileViewPage.tsx` owns the opened file view and listenable Chinese entries.
+* `src/features/folders/FolderFilesPage.tsx` owns folder-specific file lists.
 
 A dedicated router library can be added later if route complexity justifies it.
 
@@ -552,6 +553,13 @@ First version can support:
 * list files in folder
 
 Avoid nested folders in the first version.
+
+Current implementation:
+
+* `src/features/files/FileListPage.tsx` creates folders and links to folder pages.
+* `src/features/folders/FolderFilesPage.tsx` shows files assigned to one folder.
+* `src/features/files/FileViewPage.tsx` includes folder assignment in edit mode.
+* `src/db/vocabularyRepository.ts` exposes folder lookup and folder-filtered file listing.
 
 ---
 

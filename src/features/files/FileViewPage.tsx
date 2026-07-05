@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { routes } from '../../app/routes';
 import {
   getVocabularyFile,
+  listFolders,
   updateVocabularyFile,
 } from '../../db/vocabularyRepository';
 import { parseVocabulary } from './parseVocabulary';
 import { speakChinese } from './speech';
-import type { VocabularyFileWithEntries } from './types';
+import type { Folder, VocabularyFileWithEntries } from './types';
 
 type FileViewPageProps = {
   fileId: string;
@@ -64,7 +65,9 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [folders, setFolders] = useState<Folder[]>([]);
   const [titleDraft, setTitleDraft] = useState('');
+  const [folderDraft, setFolderDraft] = useState('');
   const [rawDraft, setRawDraft] = useState('');
   const [message, setMessage] = useState('');
 
@@ -72,10 +75,14 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
     let isMounted = true;
 
     async function loadFile() {
-      const savedFile = await getVocabularyFile(fileId);
+      const [savedFile, loadedFolders] = await Promise.all([
+        getVocabularyFile(fileId),
+        listFolders(),
+      ]);
 
       if (isMounted) {
         setFileData(savedFile);
+        setFolders(loadedFolders);
         setIsLoading(false);
         setIsEditing(false);
         setMessage('');
@@ -95,6 +102,7 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
     }
 
     setTitleDraft(fileData.file.title);
+    setFolderDraft(fileData.file.folderId ?? '');
     setRawDraft(entriesToRawText(fileData));
     setMessage('');
     setIsEditing(true);
@@ -123,6 +131,7 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
     try {
       const updatedFile = await updateVocabularyFile(fileData.file.id, {
         title: titleDraft.trim(),
+        folderId: folderDraft || null,
         entries: parsed.entries,
       });
 
@@ -186,17 +195,38 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
             {message ? <p className="form-message">{message}</p> : null}
 
             {isEditing ? (
-              <div className="edit-content-field">
-                <label className="field-label" htmlFor="file-content">
-                  Vocabulary text
-                </label>
-                <textarea
-                  id="file-content"
-                  className="vocabulary-textarea"
-                  value={rawDraft}
-                  onChange={(event) => setRawDraft(event.target.value)}
-                  rows={12}
-                />
+              <div className="edit-fields">
+                <div className="edit-content-field">
+                  <label className="field-label" htmlFor="file-folder">
+                    Folder
+                  </label>
+                  <select
+                    id="file-folder"
+                    className="select-input"
+                    value={folderDraft}
+                    onChange={(event) => setFolderDraft(event.target.value)}
+                  >
+                    <option value="">No folder</option>
+                    {folders.map((folder) => (
+                      <option key={folder.id} value={folder.id}>
+                        {folder.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="edit-content-field">
+                  <label className="field-label" htmlFor="file-content">
+                    Vocabulary text
+                  </label>
+                  <textarea
+                    id="file-content"
+                    className="vocabulary-textarea"
+                    value={rawDraft}
+                    onChange={(event) => setRawDraft(event.target.value)}
+                    rows={12}
+                  />
+                </div>
               </div>
             ) : (
               <ol className="entry-list">

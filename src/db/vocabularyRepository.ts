@@ -66,6 +66,10 @@ export async function listFolders(): Promise<Folder[]> {
   return db.folders.orderBy('createdAt').toArray();
 }
 
+export async function getFolder(folderId: string): Promise<Folder | null> {
+  return (await db.folders.get(folderId)) ?? null;
+}
+
 export async function createVocabularyFile(
   input: CreateVocabularyFileInput,
 ): Promise<VocabularyFileWithEntries> {
@@ -92,6 +96,16 @@ export async function createVocabularyFile(
 
 export async function listVocabularyFiles(): Promise<VocabularyFile[]> {
   return db.files.orderBy('updatedAt').reverse().toArray();
+}
+
+export async function listVocabularyFilesByFolder(
+  folderId: string,
+): Promise<VocabularyFile[]> {
+  const files = await db.files.where('folderId').equals(folderId).toArray();
+
+  return files.sort((firstFile, secondFile) =>
+    secondFile.updatedAt.localeCompare(firstFile.updatedAt),
+  );
 }
 
 export async function getVocabularyFile(

@@ -41,6 +41,15 @@ a {
   color: inherit;
 }
 
+.sr-only {
+  width: 1px;
+  height: 1px;
+  position: absolute;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
 :focus-visible {
   outline: 3px solid var(--color-focus);
   outline-offset: 3px;
@@ -183,13 +192,20 @@ h2 {
   font-weight: 700;
 }
 
+.edit-fields,
 .edit-title-field,
 .edit-content-field {
   display: grid;
   gap: 8px;
 }
 
-.title-input {
+.edit-fields {
+  margin-top: 16px;
+  gap: 16px;
+}
+
+.title-input,
+.select-input {
   width: 100%;
   min-height: 48px;
   border: 1px solid var(--color-border);
@@ -199,6 +215,20 @@ h2 {
   color: var(--color-text);
   font-size: 1.1rem;
   font-weight: 800;
+}
+
+.select-input {
+  font-weight: 700;
+}
+
+.text-input {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 
 .vocabulary-textarea {
@@ -311,6 +341,12 @@ h2 {
   gap: 12px;
 }
 
+.inline-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
 .primary-action,
 .secondary-action,
 .text-link {
@@ -382,7 +418,7 @@ h2 {
 }
 
 .file-list-link,
-.folder-list li {
+.folder-list-link {
   display: grid;
   gap: 6px;
   min-height: 64px;
@@ -393,6 +429,10 @@ h2 {
 }
 
 .file-list-link {
+  text-decoration: none;
+}
+
+.folder-list-link {
   text-decoration: none;
 }
 
