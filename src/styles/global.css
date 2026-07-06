@@ -382,6 +382,9 @@ h2 {
   color: var(--color-text);
 }
 
+.entry-button-listened {
+  color: var(--color-text-muted);
+}
 
 .entry-dutch-button-active,
 .entry-chinese-button-active,

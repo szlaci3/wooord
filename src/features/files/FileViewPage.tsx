@@ -71,6 +71,9 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
   const [rawDraft, setRawDraft] = useState('');
   const [message, setMessage] = useState('');
   const [activeAudioId, setActiveAudioId] = useState<string | null>(null);
+  const [listenedEntryIds, setListenedEntryIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const parsedDraft = useMemo(() => parseVocabulary(rawDraft), [rawDraft]);
 
   useEffect(() => {
@@ -149,14 +152,42 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
     }
   }
 
-  function playEntry(audioId: string, speak: () => boolean) {
+  function playEntry(entryId: string, audioId: string, speak: () => boolean) {
     setActiveAudioId(audioId);
 
     const didStart = speak();
 
     if (!didStart) {
       setActiveAudioId(null);
+      return;
     }
+
+    setListenedEntryIds((current) => {
+      const next = new Set(current);
+      next.add(entryId);
+      return next;
+    });
+  }
+
+  function finishEntryAudio(audioId: string) {
+    setActiveAudioId((currentAudioId) =>
+      currentAudioId === audioId ? null : currentAudioId,
+    );
+  }
+
+  function getEntryButtonClass(
+    baseClassName: string,
+    activeClassName: string,
+    entryId: string,
+    audioId: string,
+  ) {
+    return [
+      baseClassName,
+      listenedEntryIds.has(entryId) ? 'entry-button-listened' : '',
+      activeAudioId === audioId ? activeClassName : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
   }
 
   return (
@@ -251,17 +282,19 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
                   <li key={entry.id} className="entry-item">
                     <div className="entry-language-row">
                       <button
-                        className={
-                          activeAudioId === `${entry.id}:dutch`
-                            ? 'entry-dutch-button entry-dutch-button-active'
-                            : 'entry-dutch-button'
-                        }
+                        className={getEntryButtonClass(
+                          'entry-dutch-button',
+                          'entry-dutch-button-active',
+                          entry.id,
+                          `${entry.id}:dutch`,
+                        )}
                         type="button"
                         aria-pressed={activeAudioId === `${entry.id}:dutch`}
                         onClick={() =>
-                          playEntry(`${entry.id}:dutch`, () =>
+                          playEntry(entry.id, `${entry.id}:dutch`, () =>
                             speakDutch(entry.dutch, {
-                              onEnd: () => setActiveAudioId(null),
+                              onEnd: () =>
+                                finishEntryAudio(`${entry.id}:dutch`),
                             }),
                           )
                         }
@@ -278,9 +311,10 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
                         aria-label={`Play Dutch expression: ${entry.dutch}`}
                         aria-pressed={activeAudioId === `${entry.id}:dutch`}
                         onClick={() =>
-                          playEntry(`${entry.id}:dutch`, () =>
+                          playEntry(entry.id, `${entry.id}:dutch`, () =>
                             speakDutch(entry.dutch, {
-                              onEnd: () => setActiveAudioId(null),
+                              onEnd: () =>
+                                finishEntryAudio(`${entry.id}:dutch`),
                             }),
                           )
                         }
@@ -290,17 +324,19 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
                     </div>
                     <div className="entry-language-row">
                       <button
-                        className={
-                          activeAudioId === `${entry.id}:chinese`
-                            ? 'entry-chinese-button entry-chinese-button-active'
-                            : 'entry-chinese-button'
-                        }
+                        className={getEntryButtonClass(
+                          'entry-chinese-button',
+                          'entry-chinese-button-active',
+                          entry.id,
+                          `${entry.id}:chinese`,
+                        )}
                         type="button"
                         aria-pressed={activeAudioId === `${entry.id}:chinese`}
                         onClick={() =>
-                          playEntry(`${entry.id}:chinese`, () =>
+                          playEntry(entry.id, `${entry.id}:chinese`, () =>
                             speakChinese(entry.chinese, {
-                              onEnd: () => setActiveAudioId(null),
+                              onEnd: () =>
+                                finishEntryAudio(`${entry.id}:chinese`),
                             }),
                           )
                         }
@@ -317,9 +353,10 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
                         aria-label={`Play Chinese translation: ${entry.chinese}`}
                         aria-pressed={activeAudioId === `${entry.id}:chinese`}
                         onClick={() =>
-                          playEntry(`${entry.id}:chinese`, () =>
+                          playEntry(entry.id, `${entry.id}:chinese`, () =>
                             speakChinese(entry.chinese, {
-                              onEnd: () => setActiveAudioId(null),
+                              onEnd: () =>
+                                finishEntryAudio(`${entry.id}:chinese`),
                             }),
                           )
                         }
