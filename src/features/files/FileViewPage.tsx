@@ -310,8 +310,8 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
                       <button
                         className={
                           activeAudioId === `${entry.id}:chinese`
-                            ? 'entry-audio-button entry-audio-button-active'
-                            : 'entry-audio-button'
+                            ? 'chinese entry-audio-button entry-audio-button-active'
+                            : 'chinese entry-audio-button'
                         }
                         type="button"
                         aria-label={`Play Chinese translation: ${entry.chinese}`}

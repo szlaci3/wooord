@@ -326,9 +326,9 @@ h2 {
   display: grid;
   gap: 12px;
   padding: 14px;
-  border: 1px solid var(--color-border);
+  /* border: 1px solid var(--color-border);
   border-radius: 8px;
-  background: var(--color-primary-soft);
+  background: var(--color-primary-soft); */
 }
 
 .entry-language-row {
@@ -349,6 +349,10 @@ h2 {
   cursor: pointer;
 }
 
+.entry-audio-button.chinese {
+  min-height: 62px;
+}
+
 .entry-dutch-button,
 .entry-chinese-button {
   padding: 10px 12px;
@@ -357,14 +361,12 @@ h2 {
 }
 
 .entry-dutch-button {
-  color: var(--color-text-muted);
-  font-size: 1.2rem;
-  font-weight: 800;
+  color: var(--color-primary);
+  font-size: 1.3rem;
 }
 
 .entry-chinese-button {
   font-size: 2rem;
-  font-weight: 800;
 }
 
 .entry-audio-button {
@@ -373,11 +375,17 @@ h2 {
   align-items: center;
   justify-content: center;
   color: var(--color-primary);
+  display: none;
 }
+
+.entry-audio-button.chinese {
+  color: var(--color-text);
+}
+
 
 .entry-dutch-button-active,
 .entry-chinese-button-active,
-.entry-audio-button-active {
+.app-shell .entry-audio-button-active {
   border-color: var(--color-success);
   color: var(--color-success);
 }
