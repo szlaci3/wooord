@@ -31,16 +31,24 @@ function getBackText(entry: VocabularyEntry, direction: FlashcardDirection) {
   return direction === 'dutch-to-chinese' ? entry.chinese : entry.dutch;
 }
 
-function speakFlashcardText(text: string, direction: FlashcardDirection) {
+function speakFlashcardText(
+  text: string,
+  direction: FlashcardDirection,
+  onEnd: () => void,
+) {
   return direction === 'dutch-to-chinese'
-    ? speakDutch(text)
-    : speakChinese(text);
+    ? speakDutch(text, { onEnd })
+    : speakChinese(text, { onEnd });
 }
 
-function speakFlashcardAnswer(text: string, direction: FlashcardDirection) {
+function speakFlashcardAnswer(
+  text: string,
+  direction: FlashcardDirection,
+  onEnd: () => void,
+) {
   return direction === 'dutch-to-chinese'
-    ? speakChinese(text)
-    : speakDutch(text);
+    ? speakChinese(text, { onEnd })
+    : speakDutch(text, { onEnd });
 }
 
 export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
@@ -53,6 +61,7 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isRevealed, setIsRevealed] = useState(false);
   const [message, setMessage] = useState('');
+  const [activeAudioId, setActiveAudioId] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -95,6 +104,7 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
   function changeDirection(nextDirection: FlashcardDirection) {
     setDirection(nextDirection);
     setIsRevealed(false);
+    setActiveAudioId(null);
   }
 
   function goToPreviousCard() {
@@ -102,6 +112,7 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
       entries.length > 0 ? (index + entries.length - 1) % entries.length : 0,
     );
     setIsRevealed(false);
+    setActiveAudioId(null);
   }
 
   function goToNextCard() {
@@ -109,6 +120,51 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
       entries.length > 0 ? (index + 1) % entries.length : 0,
     );
     setIsRevealed(false);
+    setActiveAudioId(null);
+  }
+
+  function finishAudio(audioId: string) {
+    setActiveAudioId((currentAudioId) =>
+      currentAudioId === audioId ? null : currentAudioId,
+    );
+  }
+
+  function playPromptAudio() {
+    if (!currentEntry) {
+      return;
+    }
+
+    const audioId = `${currentEntry.id}:prompt`;
+    setActiveAudioId(audioId);
+
+    const didStart = speakFlashcardText(
+      getFrontText(currentEntry, direction),
+      direction,
+      () => finishAudio(audioId),
+    );
+
+    if (!didStart) {
+      setActiveAudioId(null);
+    }
+  }
+
+  function playAnswerAudio() {
+    if (!currentEntry) {
+      return;
+    }
+
+    const audioId = `${currentEntry.id}:answer`;
+    setActiveAudioId(audioId);
+
+    const didStart = speakFlashcardAnswer(
+      getBackText(currentEntry, direction),
+      direction,
+      () => finishAudio(audioId),
+    );
+
+    if (!didStart) {
+      setActiveAudioId(null);
+    }
   }
 
   return (
@@ -188,21 +244,27 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
 
             <div className="flashcard-audio-row">
               <button
-                className="secondary-action action-button"
-                type="button"
-                onClick={() =>
-                  speakFlashcardText(getFrontText(currentEntry, direction), direction)
+                className={
+                  activeAudioId === `${currentEntry.id}:prompt`
+                    ? 'secondary-action action-button flashcard-audio-active'
+                    : 'secondary-action action-button'
                 }
+                type="button"
+                aria-pressed={activeAudioId === `${currentEntry.id}:prompt`}
+                onClick={playPromptAudio}
               >
                 <SpeakerIcon />
                 Prompt
               </button>
               <button
-                className="secondary-action action-button"
-                type="button"
-                onClick={() =>
-                  speakFlashcardAnswer(getBackText(currentEntry, direction), direction)
+                className={
+                  activeAudioId === `${currentEntry.id}:answer`
+                    ? 'secondary-action action-button flashcard-audio-active'
+                    : 'secondary-action action-button'
                 }
+                type="button"
+                aria-pressed={activeAudioId === `${currentEntry.id}:answer`}
+                onClick={playAnswerAudio}
               >
                 <SpeakerIcon />
                 Answer
