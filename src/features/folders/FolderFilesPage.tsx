@@ -79,7 +79,7 @@ export function FolderFilesPage({ folderId }: FolderFilesPageProps) {
                     <a className="file-list-link" href={routes.file(file.id)}>
                       <span className="file-list-title">{file.title}</span>
                       <span className="file-list-meta">
-                        {formatDisplayDate(file.updatedAt)}
+                        {formatDisplayDate(file.createdAt)}
                       </span>
                     </a>
                   </li>
