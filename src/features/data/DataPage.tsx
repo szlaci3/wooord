@@ -6,8 +6,10 @@ import {
   readWooordExportFile,
   replaceWooordDatabase,
 } from './databaseExportImport';
+import { useUiLanguage } from '../settings/uiLanguage';
 
 export function DataPage() {
+  const { t } = useUiLanguage();
   const replaceInputRef = useRef<HTMLInputElement | null>(null);
   const mergeInputRef = useRef<HTMLInputElement | null>(null);
   const [message, setMessage] = useState('');
@@ -26,10 +28,10 @@ export function DataPage() {
     try {
       await downloadWooordDatabaseExport();
       setMessageTone('success');
-      setMessage('Database export started. Check your downloads.');
+      setMessage(t('exportStarted'));
     } catch {
       setMessageTone('error');
-      setMessage('The database could not be exported. Try again.');
+      setMessage(t('exportError'));
     } finally {
       setIsExporting(false);
     }
@@ -57,22 +59,20 @@ export function DataPage() {
 
     try {
       const backup = await readWooordExportFile(file);
-      const confirmed = window.confirm(
-        'This will replace all current wooord data on this device. Continue?',
-      );
+      const confirmed = window.confirm(t('replaceConfirm'));
 
       if (!confirmed) {
         setMessageTone('success');
-        setMessage('Import canceled. Current data was not changed.');
+        setMessage(t('importCanceled'));
         return;
       }
 
       await replaceWooordDatabase(backup);
       setMessageTone('success');
-      setMessage('Database import complete. Current data was replaced.');
-    } catch (error) {
+      setMessage(t('importReplaced'));
+    } catch {
       setMessageTone('error');
-      setMessage(error instanceof Error ? error.message : 'Import failed.');
+      setMessage(t('importFailed'));
     } finally {
       setIsImporting(false);
     }
@@ -95,10 +95,10 @@ export function DataPage() {
 
       await mergeWooordDatabase(backup);
       setMessageTone('success');
-      setMessage('Database added. Current data was preserved.');
-    } catch (error) {
+      setMessage(t('databaseMerged'));
+    } catch {
       setMessageTone('error');
-      setMessage(error instanceof Error ? error.message : 'Import failed.');
+      setMessage(t('importFailed'));
     } finally {
       setIsImporting(false);
     }
@@ -110,12 +110,12 @@ export function DataPage() {
         <a className="back-link" href={routes.home}>
           wooord
         </a>
-        <p className="eyebrow">Data</p>
+        <p className="eyebrow">{t('data')}</p>
       </header>
 
       <section className="content-card" aria-labelledby="data-heading">
         <h1 id="data-heading" className="page-title">
-          Local data
+          {t('localData')}
         </h1>
 
         <div className="data-actions">
@@ -125,7 +125,7 @@ export function DataPage() {
             onClick={handleExport}
             disabled={isExporting || isImporting}
           >
-            Export database
+            {t('exportDatabase')}
           </button>
           <button
             className="data-action-button data-action-danger"
@@ -133,7 +133,7 @@ export function DataPage() {
             onClick={handleReplaceClick}
             disabled={isExporting || isImporting}
           >
-            Import database, replace current data
+            {t('importReplace')}
           </button>
           <input
             ref={replaceInputRef}
@@ -148,7 +148,7 @@ export function DataPage() {
             onClick={handleMergeClick}
             disabled={isExporting || isImporting}
           >
-            Add existing database, preserve current data
+            {t('mergeDatabase')}
           </button>
           <input
             ref={mergeInputRef}

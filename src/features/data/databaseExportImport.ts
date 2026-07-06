@@ -1,6 +1,7 @@
 import { db } from '../../db/db';
 import type { WooordDatabaseExport } from './types';
 import type { Folder, VocabularyEntry, VocabularyFile } from '../files/types';
+import type { AppSetting } from '../settings/types';
 
 function formatLocalDate(date: Date) {
   const year = date.getFullYear();
@@ -15,20 +16,22 @@ export function createBackupFilename(date = new Date()) {
 }
 
 export async function exportWooordDatabase(): Promise<WooordDatabaseExport> {
-  const [folders, files, entries] = await Promise.all([
+  const [folders, files, entries, settings] = await Promise.all([
     db.folders.toArray(),
     db.files.toArray(),
     db.entries.toArray(),
+    db.settings.toArray(),
   ]);
 
   return {
     app: 'wooord',
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     data: {
       folders,
       files,
       entries,
+      settings,
     },
   };
 }
@@ -88,6 +91,15 @@ function isVocabularyEntry(value: unknown): value is VocabularyEntry {
   );
 }
 
+function isAppSetting(value: unknown): value is AppSetting {
+  return (
+    isRecord(value) &&
+    isString(value.key) &&
+    isString(value.value) &&
+    isString(value.updatedAt)
+  );
+}
+
 function assertUniqueIds(records: { id: string }[], label: string) {
   const ids = new Set<string>();
 
@@ -100,6 +112,18 @@ function assertUniqueIds(records: { id: string }[], label: string) {
   }
 }
 
+function assertUniqueKeys(records: { key: string }[], label: string) {
+  const keys = new Set<string>();
+
+  for (const record of records) {
+    if (keys.has(record.key)) {
+      throw new Error(`Backup file contains duplicate ${label} keys.`);
+    }
+
+    keys.add(record.key);
+  }
+}
+
 export function validateWooordDatabaseExport(
   value: unknown,
 ): WooordDatabaseExport {
@@ -107,7 +131,7 @@ export function validateWooordDatabaseExport(
     throw new Error('Backup file must contain a JSON object.');
   }
 
-  if (value.app !== 'wooord' || value.version !== 1) {
+  if (value.app !== 'wooord' || (value.version !== 1 && value.version !== 2)) {
     throw new Error('Backup file is not a compatible wooord export.');
   }
 
@@ -116,14 +140,17 @@ export function validateWooordDatabaseExport(
   }
 
   const { folders, files, entries } = value.data;
+  const settings = value.version === 2 ? value.data.settings : [];
 
   if (
     !Array.isArray(folders) ||
     !Array.isArray(files) ||
     !Array.isArray(entries) ||
+    !Array.isArray(settings) ||
     !folders.every(isFolder) ||
     !files.every(isVocabularyFile) ||
-    !entries.every(isVocabularyEntry)
+    !entries.every(isVocabularyEntry) ||
+    !settings.every(isAppSetting)
   ) {
     throw new Error('Backup file contains malformed wooord data.');
   }
@@ -131,6 +158,7 @@ export function validateWooordDatabaseExport(
   assertUniqueIds(folders, 'folder');
   assertUniqueIds(files, 'file');
   assertUniqueIds(entries, 'entry');
+  assertUniqueKeys(settings, 'setting');
 
   const folderIds = new Set(folders.map((folder) => folder.id));
   const fileIds = new Set(files.map((file) => file.id));
@@ -149,12 +177,13 @@ export function validateWooordDatabaseExport(
 
   return {
     app: 'wooord',
-    version: 1,
+    version: value.version,
     exportedAt: value.exportedAt,
     data: {
       folders,
       files,
       entries,
+      settings,
     },
   };
 }
@@ -172,10 +201,11 @@ export async function readWooordExportFile(file: File) {
 }
 
 export async function replaceWooordDatabase(backup: WooordDatabaseExport) {
-  await db.transaction('rw', db.folders, db.files, db.entries, async () => {
+  await db.transaction('rw', db.folders, db.files, db.entries, db.settings, async () => {
     await db.entries.clear();
     await db.files.clear();
     await db.folders.clear();
+    await db.settings.clear();
 
     if (backup.data.folders.length > 0) {
       await db.folders.bulkAdd(backup.data.folders);
@@ -187,6 +217,10 @@ export async function replaceWooordDatabase(backup: WooordDatabaseExport) {
 
     if (backup.data.entries.length > 0) {
       await db.entries.bulkAdd(backup.data.entries);
+    }
+
+    if (backup.data.settings.length > 0) {
+      await db.settings.bulkAdd(backup.data.settings);
     }
   });
 }

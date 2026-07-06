@@ -5,6 +5,7 @@ import {
   saveVoicePreferences,
   type VoicePreferences,
 } from './voicePreferences';
+import { useUiLanguage } from './uiLanguage';
 import { listLanguageVoices } from './voiceSelection';
 
 function canUseSpeechSynthesis() {
@@ -22,6 +23,7 @@ function loadVoices() {
 }
 
 export function SettingsPage() {
+  const { language, setLanguage, t } = useUiLanguage();
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>(() =>
     loadVoices(),
   );
@@ -62,10 +64,11 @@ export function SettingsPage() {
     [voices],
   );
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     saveVoicePreferences(preferences);
-    setMessage('Voice settings saved.');
+    await setLanguage(language);
+    setMessage(t('settingsSaved'));
   }
 
   return (
@@ -74,7 +77,7 @@ export function SettingsPage() {
         <a className="back-link" href={routes.home}>
           wooord
         </a>
-        <p className="eyebrow">Settings</p>
+        <p className="eyebrow">{t('settings')}</p>
       </header>
 
       <form
@@ -83,17 +86,36 @@ export function SettingsPage() {
         onSubmit={handleSubmit}
       >
         <h1 id="settings-heading" className="page-title">
-          Voice settings
+          {t('voiceSettings')}
         </h1>
+
+        <label className="settings-field" htmlFor="ui-language">
+          <span>{t('uiLanguage')}</span>
+          <select
+            id="ui-language"
+            className="select-input"
+            value={language}
+            onChange={(event) => {
+              const nextLanguage =
+                event.target.value === 'en' ? 'en' : 'zh';
+
+              void setLanguage(nextLanguage);
+              setMessage('');
+            }}
+          >
+            <option value="zh">{t('chineseUi')}</option>
+            <option value="en">{t('englishUi')}</option>
+          </select>
+        </label>
 
         {!canUseSpeechSynthesis() ? (
           <p className="form-message" role="alert">
-            Speech synthesis is not available in this browser.
+            {t('speechUnavailable')}
           </p>
         ) : null}
 
         <label className="settings-field" htmlFor="dutch-voice">
-          <span>Dutch voice</span>
+          <span>{t('dutchVoice')}</span>
           <select
             id="dutch-voice"
             className="select-input"
@@ -105,21 +127,18 @@ export function SettingsPage() {
               }))
             }
           >
-            <option value="">Automatic - prefer Belgian Dutch</option>
+            <option value="">{t('automaticDutch')}</option>
             {dutchVoices.map((voice) => (
               <option key={voice.voiceURI} value={voice.voiceURI}>
                 {voice.name} ({voice.lang})
               </option>
             ))}
           </select>
-          <small>
-            Dutch voices such as nl-BE and nl-NL appear when your browser
-            exposes them.
-          </small>
+          <small>{t('dutchVoiceHint')}</small>
         </label>
 
         <label className="settings-field" htmlFor="chinese-voice">
-          <span>Chinese voice</span>
+          <span>{t('chineseVoice')}</span>
           <select
             id="chinese-voice"
             className="select-input"
@@ -131,21 +150,18 @@ export function SettingsPage() {
               }))
             }
           >
-            <option value="">Automatic - prefer Mandarin Chinese</option>
+            <option value="">{t('automaticChinese')}</option>
             {chineseVoices.map((voice) => (
               <option key={voice.voiceURI} value={voice.voiceURI}>
                 {voice.name} ({voice.lang})
               </option>
             ))}
           </select>
-          <small>
-            Taiwan voices such as zh-TW are selectable when your browser
-            exposes them.
-          </small>
+          <small>{t('chineseVoiceHint')}</small>
         </label>
 
         <button className="data-action-button" type="submit">
-          Save voice settings
+          {t('saveSettings')}
         </button>
 
         {message ? (
@@ -157,4 +173,3 @@ export function SettingsPage() {
     </main>
   );
 }
-

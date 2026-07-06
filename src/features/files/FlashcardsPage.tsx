@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { routes } from '../../app/routes';
 import { getVocabularyFile } from '../../db/vocabularyRepository';
+import { useUiLanguage } from '../settings/uiLanguage';
 import { speakChinese, speakDutch } from './speech';
 import type { VocabularyEntry, VocabularyFileWithEntries } from './types';
 
@@ -52,6 +53,7 @@ function speakFlashcardAnswer(
 }
 
 export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
+  const { t } = useUiLanguage();
   const [fileData, setFileData] = useState<VocabularyFileWithEntries | null>(
     null,
   );
@@ -75,7 +77,7 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
         }
       } catch {
         if (isMounted) {
-          setMessage('Flashcards could not be loaded.');
+          setMessage(t('flashcardsLoadError'));
         }
       } finally {
         if (isMounted) {
@@ -89,7 +91,7 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
     return () => {
       isMounted = false;
     };
-  }, [fileId]);
+  }, [fileId, t]);
 
   const entries = fileData?.entries ?? [];
   const currentEntry = entries[currentIndex] ?? null;
@@ -173,12 +175,12 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
         <a className="back-link" href={routes.home}>
           wooord
         </a>
-        <p className="eyebrow">Flashcards</p>
+        <p className="eyebrow">{t('flashcards')}</p>
       </header>
 
-      <section className="content-card" aria-label="Flashcards">
+      <section className="content-card" aria-label={t('flashcards')}>
         {isLoading ? (
-          <p className="empty-state">Loading flashcards...</p>
+          <p className="empty-state">{t('loadingFlashcards')}</p>
         ) : fileData && currentEntry ? (
           <>
             <div className="flashcard-heading">
@@ -187,13 +189,13 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
                 <p className="flashcard-progress">{progressText}</p>
               </div>
               <a className="text-link" href={routes.file(fileData.file.id)}>
-                File
+                {t('file')}
               </a>
             </div>
 
             {message ? <p className="form-message">{message}</p> : null}
 
-            <div className="segmented-control" aria-label="Flashcard direction">
+            <div className="segmented-control" aria-label={t('flashcardDirection')}>
               <button
                 className={
                   direction === 'dutch-to-chinese'
@@ -203,7 +205,7 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
                 type="button"
                 onClick={() => changeDirection('dutch-to-chinese')}
               >
-                Dutch
+                {t('dutch')}
               </button>
               <button
                 className={
@@ -214,7 +216,7 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
                 type="button"
                 onClick={() => changeDirection('chinese-to-dutch')}
               >
-                Chinese
+                {t('chinese')}
               </button>
             </div>
 
@@ -225,7 +227,7 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
               aria-pressed={isRevealed}
             >
               <span className="flashcard-label">
-                {isRevealed ? 'Answer' : 'Prompt'}
+                {isRevealed ? t('answer') : t('prompt')}
               </span>
               <span
                 className={
@@ -254,7 +256,7 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
                 onClick={playPromptAudio}
               >
                 <SpeakerIcon />
-                Prompt
+                {t('prompt')}
               </button>
               <button
                 className={
@@ -267,7 +269,7 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
                 onClick={playAnswerAudio}
               >
                 <SpeakerIcon />
-                Answer
+                {t('answer')}
               </button>
             </div>
 
@@ -277,21 +279,21 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
                 type="button"
                 onClick={goToPreviousCard}
               >
-                Previous
+                {t('previous')}
               </button>
               <button
                 className="primary-action action-button"
                 type="button"
                 onClick={goToNextCard}
               >
-                Next
+                {t('next')}
               </button>
             </div>
           </>
         ) : fileData ? (
-          <p className="empty-state">This file has no vocabulary entries.</p>
+          <p className="empty-state">{t('noEntriesForFlashcards')}</p>
         ) : (
-          <p className="empty-state">This file was not found.</p>
+          <p className="empty-state">{t('fileNotFound')}</p>
         )}
       </section>
     </main>

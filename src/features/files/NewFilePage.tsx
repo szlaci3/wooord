@@ -1,6 +1,7 @@
 import { type FormEvent, useId, useMemo, useState } from 'react';
 import { routes } from '../../app/routes';
 import { createVocabularyFile } from '../../db/vocabularyRepository';
+import { useUiLanguage } from '../settings/uiLanguage';
 import { parseVocabulary } from './parseVocabulary';
 
 function formatLocalDate(date: Date) {
@@ -31,6 +32,7 @@ function SaveIcon() {
 }
 
 export function NewFilePage() {
+  const { t } = useUiLanguage();
   const textareaId = useId();
   const [rawText, setRawText] = useState('');
   const [message, setMessage] = useState('');
@@ -45,7 +47,7 @@ export function NewFilePage() {
     }
 
     if (parsedPreview.entries.length === 0) {
-      setMessage('Paste at least one valid Dutch-Chinese vocabulary line.');
+      setMessage(t('pasteValidLine'));
       return;
     }
 
@@ -60,7 +62,7 @@ export function NewFilePage() {
 
       window.location.assign(routes.file(savedFile.file.id));
     } catch {
-      setMessage('The file could not be saved. Try again.');
+      setMessage(t('fileSaveError'));
       setIsSaving(false);
     }
   }
@@ -71,7 +73,7 @@ export function NewFilePage() {
         <a className="back-link" href={routes.home}>
           wooord
         </a>
-        <p className="eyebrow">New file</p>
+        <p className="eyebrow">{t('newFileEyebrow')}</p>
       </header>
 
       <form
@@ -82,13 +84,13 @@ export function NewFilePage() {
         <div className="top-action-row">
           <div>
             <h1 id="new-file-heading" className="page-title">
-              Paste vocabulary
+              {t('pasteVocabulary')}
             </h1>
           </div>
           <button
             className="icon-button"
             type="submit"
-            aria-label="Save vocabulary file"
+            aria-label={t('saveVocabularyFile')}
             disabled={isSaving}
           >
             <SaveIcon />
@@ -96,7 +98,7 @@ export function NewFilePage() {
         </div>
 
         <label className="field-label" htmlFor={textareaId}>
-          Vocabulary text
+          {t('vocabularyText')}
         </label>
         <textarea
           id={textareaId}
@@ -109,11 +111,10 @@ export function NewFilePage() {
 
         {rawText.trim() ? (
           <p className="form-hint" aria-live="polite">
-            {parsedPreview.entries.length} valid line
-            {parsedPreview.entries.length === 1 ? '' : 's'}
-            {parsedPreview.skippedLines.length > 0
-              ? `, ${parsedPreview.skippedLines.length} skipped`
-              : ''}
+            {t('validLines', {
+              count: parsedPreview.entries.length,
+              skipped: parsedPreview.skippedLines.length,
+            })}
           </p>
         ) : null}
 

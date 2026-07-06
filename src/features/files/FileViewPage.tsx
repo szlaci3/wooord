@@ -5,6 +5,7 @@ import {
   listFolders,
   updateVocabularyFile,
 } from '../../db/vocabularyRepository';
+import { useUiLanguage } from '../settings/uiLanguage';
 import { parseVocabulary } from './parseVocabulary';
 import { speakChinese, speakDutch } from './speech';
 import type { Folder, VocabularyFileWithEntries } from './types';
@@ -59,6 +60,7 @@ function entriesToRawText(fileData: VocabularyFileWithEntries) {
 }
 
 export function FileViewPage({ fileId }: FileViewPageProps) {
+  const { t } = useUiLanguage();
   const [fileData, setFileData] = useState<VocabularyFileWithEntries | null>(
     null,
   );
@@ -119,12 +121,12 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
     }
 
     if (!titleDraft.trim()) {
-      setMessage('Add a file title before saving.');
+      setMessage(t('addFileTitle'));
       return;
     }
 
     if (parsedDraft.entries.length === 0) {
-      setMessage('Keep at least one valid Dutch-Chinese vocabulary line.');
+      setMessage(t('keepValidLine'));
       return;
     }
 
@@ -139,14 +141,14 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
       });
 
       if (!updatedFile) {
-        setMessage('This file was not found.');
+        setMessage(t('fileNotFound'));
         return;
       }
 
       setFileData(updatedFile);
       setIsEditing(false);
     } catch {
-      setMessage('The file could not be saved. Try again.');
+      setMessage(t('fileSaveError'));
     } finally {
       setIsSaving(false);
     }
@@ -196,19 +198,19 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
         <a className="back-link" href={routes.home}>
           wooord
         </a>
-        <p className="eyebrow">File</p>
+        <p className="eyebrow">{t('file')}</p>
       </header>
 
-      <section className="content-card" aria-label="File">
+      <section className="content-card" aria-label={t('file')}>
         {isLoading ? (
-          <p className="empty-state">Loading file...</p>
+          <p className="empty-state">{t('loadingFile')}</p>
         ) : fileData ? (
           <>
             <div className="top-action-row">
               {isEditing ? (
                 <div className="edit-title-field">
                   <label className="field-label" htmlFor="file-title">
-                    File title
+                    {t('fileTitle')}
                   </label>
                   <input
                     id="file-title"
@@ -225,7 +227,7 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
               <button
                 className="icon-button icon-button-secondary"
                 type="button"
-                aria-label={isEditing ? 'Save file' : 'Edit file'}
+                aria-label={isEditing ? t('saveFile') : t('editFile')}
                 disabled={isSaving}
                 onClick={isEditing ? saveEdit : enterEditMode}
               >
@@ -239,7 +241,7 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
               <div className="edit-fields">
                 <div className="edit-content-field">
                   <label className="field-label" htmlFor="file-folder">
-                    Folder
+                    {t('folder')}
                   </label>
                   <select
                     id="file-folder"
@@ -247,7 +249,7 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
                     value={folderDraft}
                     onChange={(event) => setFolderDraft(event.target.value)}
                   >
-                    <option value="">No folder</option>
+                    <option value="">{t('noFolder')}</option>
                     {folders.map((folder) => (
                       <option key={folder.id} value={folder.id}>
                         {folder.name}
@@ -258,7 +260,7 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
 
                 <div className="edit-content-field">
                   <label className="field-label" htmlFor="file-content">
-                    Vocabulary text
+                    {t('vocabularyText')}
                   </label>
                   <textarea
                     id="file-content"
@@ -268,11 +270,10 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
                     rows={12}
                   />
                   <p className="form-hint" aria-live="polite">
-                    {parsedDraft.entries.length} valid line
-                    {parsedDraft.entries.length === 1 ? '' : 's'}
-                    {parsedDraft.skippedLines.length > 0
-                      ? `, ${parsedDraft.skippedLines.length} skipped`
-                      : ''}
+                    {t('validLines', {
+                      count: parsedDraft.entries.length,
+                      skipped: parsedDraft.skippedLines.length,
+                    })}
                   </p>
                 </div>
               </div>
@@ -282,7 +283,7 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
                   className="secondary-action file-study-link"
                   href={routes.flashcards(fileData.file.id)}
                 >
-                  Study flashcards
+                  {t('studyFlashcards')}
                 </a>
 
                 <ol className="entry-list">
@@ -316,7 +317,9 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
                               : 'entry-audio-button'
                           }
                           type="button"
-                          aria-label={`Play Dutch expression: ${entry.dutch}`}
+                          aria-label={t('playDutchExpression', {
+                            text: entry.dutch,
+                          })}
                           aria-pressed={activeAudioId === `${entry.id}:dutch`}
                           onClick={() =>
                             playEntry(entry.id, `${entry.id}:dutch`, () =>
@@ -358,7 +361,9 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
                               : 'chinese entry-audio-button'
                           }
                           type="button"
-                          aria-label={`Play Chinese translation: ${entry.chinese}`}
+                          aria-label={t('playChineseTranslation', {
+                            text: entry.chinese,
+                          })}
                           aria-pressed={activeAudioId === `${entry.id}:chinese`}
                           onClick={() =>
                             playEntry(entry.id, `${entry.id}:chinese`, () =>
@@ -379,7 +384,7 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
             )}
           </>
         ) : (
-          <p className="empty-state">This file was not found.</p>
+          <p className="empty-state">{t('fileNotFound')}</p>
         )}
       </section>
     </main>

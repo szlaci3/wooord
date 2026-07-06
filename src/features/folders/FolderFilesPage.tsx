@@ -4,6 +4,7 @@ import {
   getFolder,
   listVocabularyFilesByFolder,
 } from '../../db/vocabularyRepository';
+import { useUiLanguage } from '../settings/uiLanguage';
 import type { Folder, VocabularyFile } from '../files/types';
 
 function formatDisplayDate(value: string) {
@@ -19,6 +20,7 @@ type FolderFilesPageProps = {
 };
 
 export function FolderFilesPage({ folderId }: FolderFilesPageProps) {
+  const { t } = useUiLanguage();
   const [folder, setFolder] = useState<Folder | null>(null);
   const [files, setFiles] = useState<VocabularyFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,7 +42,7 @@ export function FolderFilesPage({ folderId }: FolderFilesPageProps) {
         }
       } catch {
         if (isMounted) {
-          setMessage('This folder could not be loaded.');
+          setMessage(t('folderLoadError'));
         }
       } finally {
         if (isMounted) {
@@ -54,7 +56,7 @@ export function FolderFilesPage({ folderId }: FolderFilesPageProps) {
     return () => {
       isMounted = false;
     };
-  }, [folderId]);
+  }, [folderId, t]);
 
   return (
     <main className="app-shell">
@@ -62,12 +64,12 @@ export function FolderFilesPage({ folderId }: FolderFilesPageProps) {
         <a className="back-link" href={routes.home}>
           wooord
         </a>
-        <p className="eyebrow">Folder</p>
+        <p className="eyebrow">{t('folder')}</p>
       </header>
 
-      <section className="content-card" aria-label="Folder files">
+      <section className="content-card" aria-label={t('folderFiles')}>
         {isLoading ? (
-          <p className="empty-state">Loading folder...</p>
+          <p className="empty-state">{t('loadingFolder')}</p>
         ) : folder ? (
           <>
             <h1 className="page-title">{folder.name}</h1>
@@ -87,18 +89,18 @@ export function FolderFilesPage({ folderId }: FolderFilesPageProps) {
                         className="file-list-study-link"
                         href={routes.flashcards(file.id)}
                       >
-                        Flashcards
+                        {t('flashcards')}
                       </a>
                     </div>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="empty-state">No files in this folder yet.</p>
+              <p className="empty-state">{t('noFilesInFolder')}</p>
             )}
           </>
         ) : (
-          <p className="empty-state">This folder was not found.</p>
+          <p className="empty-state">{t('folderNotFound')}</p>
         )}
       </section>
     </main>

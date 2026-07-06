@@ -5,6 +5,7 @@ import {
   listFolders,
   listVocabularyFiles,
 } from '../../db/vocabularyRepository';
+import { useUiLanguage } from '../settings/uiLanguage';
 import type { Folder, VocabularyFile } from './types';
 
 function formatDisplayDate(value: string) {
@@ -16,6 +17,7 @@ function formatDisplayDate(value: string) {
 }
 
 export function FileListPage() {
+  const { t } = useUiLanguage();
   const [files, setFiles] = useState<VocabularyFile[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,7 +40,7 @@ export function FileListPage() {
         }
       } catch {
         if (isMounted) {
-          setMessage('Saved files could not be loaded.');
+          setMessage(t('savedFilesLoadError'));
         }
       } finally {
         if (isMounted) {
@@ -52,7 +54,7 @@ export function FileListPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [t]);
 
   const folderNamesById = useMemo(() => {
     return new Map(folders.map((folder) => [folder.id, folder.name]));
@@ -64,7 +66,7 @@ export function FileListPage() {
     const trimmedName = folderName.trim();
 
     if (!trimmedName) {
-      setMessage('Add a folder name before saving.');
+      setMessage(t('addFolderName'));
       return;
     }
 
@@ -75,28 +77,26 @@ export function FileListPage() {
       setFolderName('');
       setMessage('');
     } catch {
-      setMessage('The folder could not be created. Try again.');
+      setMessage(t('folderCreateError'));
     }
   }
 
   return (
     <main className="app-shell">
       <section className="home-panel" aria-labelledby="app-title">
-        <p className="eyebrow">Dutch - Chinese vocabulary</p>
+        <p className="eyebrow">{t('appEyebrow')}</p>
         <h1 id="app-title">wooord</h1>
-        <p className="intro">
-          Local Dutch-Chinese vocabulary files for review and listening.
-        </p>
+        <p className="intro">{t('appIntro')}</p>
 
-        <nav className="quick-actions" aria-label="Primary">
+        <nav className="quick-actions" aria-label={t('primaryNavigation')}>
           <a className="primary-action" href={routes.newFile}>
-            New file
+            {t('newFile')}
           </a>
           <a className="secondary-action" href={routes.data}>
-            Data
+            {t('data')}
           </a>
           <a className="secondary-action" href={routes.settings}>
-            Settings
+            {t('settings')}
           </a>
         </nav>
       </section>
@@ -105,21 +105,21 @@ export function FileListPage() {
 
       <section className="content-section" aria-labelledby="new-folder-heading">
         <div className="section-heading">
-          <h2 id="new-folder-heading">New folder</h2>
+          <h2 id="new-folder-heading">{t('newFolder')}</h2>
         </div>
         <form className="inline-form" onSubmit={handleCreateFolder}>
           <label className="sr-only" htmlFor="folder-name">
-            Folder name
+            {t('folderName')}
           </label>
           <input
             id="folder-name"
             className="text-input"
             value={folderName}
             onChange={(event) => setFolderName(event.target.value)}
-            placeholder="Folder name"
+            placeholder={t('folderName')}
           />
           <button className="secondary-action action-button" type="submit">
-            Create
+            {t('create')}
           </button>
         </form>
       </section>
@@ -127,7 +127,7 @@ export function FileListPage() {
       {folders.length > 0 ? (
         <section className="content-section" aria-labelledby="folders-heading">
           <div className="section-heading">
-            <h2 id="folders-heading">Folders</h2>
+            <h2 id="folders-heading">{t('folders')}</h2>
           </div>
           <ul className="folder-list">
             {folders.map((folder) => (
@@ -144,14 +144,14 @@ export function FileListPage() {
 
       <section className="content-section" aria-labelledby="files-heading">
         <div className="section-heading">
-          <h2 id="files-heading">Files</h2>
+          <h2 id="files-heading">{t('files')}</h2>
           <a className="text-link" href={routes.newFile}>
-            Create
+            {t('createFile')}
           </a>
         </div>
 
         {isLoading ? (
-          <p className="empty-state">Loading files...</p>
+          <p className="empty-state">{t('loadingFiles')}</p>
         ) : files.length > 0 ? (
           <ul className="file-list">
             {files.map((file) => (
@@ -170,17 +170,14 @@ export function FileListPage() {
                     className="file-list-study-link"
                     href={routes.flashcards(file.id)}
                   >
-                    Flashcards
+                    {t('flashcards')}
                   </a>
                 </div>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="empty-state">
-            No vocabulary files yet. Create a file to start building your local
-            study list.
-          </p>
+          <p className="empty-state">{t('noFiles')}</p>
         )}
       </section>
     </main>
