@@ -252,33 +252,31 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
                 {fileData.entries.map((entry) => (
                   <li key={entry.id} className="entry-item">
                     <span className="entry-dutch">{entry.dutch}</span>
-                    <div className="entry-chinese-row">
-                      <button
-                        className={
-                          activeEntryId === entry.id
-                            ? 'entry-chinese-button entry-chinese-button-active'
-                            : 'entry-chinese-button'
-                        }
-                        type="button"
-                        aria-pressed={activeEntryId === entry.id}
-                        onClick={() => playEntry(entry.id, entry.chinese)}
-                      >
-                        {entry.chinese}
-                      </button>
-                      <button
-                        className={
-                          activeEntryId === entry.id
-                            ? 'entry-audio-button entry-audio-button-active'
-                            : 'entry-audio-button'
-                        }
-                        type="button"
-                        aria-label={`Play Chinese translation: ${entry.chinese}`}
-                        aria-pressed={activeEntryId === entry.id}
-                        onClick={() => playEntry(entry.id, entry.chinese)}
-                      >
-                        <SpeakerIcon />
-                      </button>
-                    </div>
+                    <button
+                      className={
+                        activeEntryId === entry.id
+                          ? 'entry-audio-button entry-audio-button-active'
+                          : 'entry-audio-button'
+                      }
+                      type="button"
+                      aria-label={`Play Chinese translation: ${entry.chinese}`}
+                      aria-pressed={activeEntryId === entry.id}
+                      onClick={() => playEntry(entry.id, entry.chinese)}
+                    >
+                      <SpeakerIcon />
+                    </button>
+                    <button
+                      className={
+                        activeEntryId === entry.id
+                          ? 'entry-chinese-button entry-chinese-button-active'
+                          : 'entry-chinese-button'
+                      }
+                      type="button"
+                      aria-pressed={activeEntryId === entry.id}
+                      onClick={() => playEntry(entry.id, entry.chinese)}
+                    >
+                      {entry.chinese}
+                    </button>
                   </li>
                 ))}
               </ol>
