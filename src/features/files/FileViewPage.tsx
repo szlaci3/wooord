@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { routes } from '../../app/routes';
 import {
   getVocabularyFile,
@@ -70,6 +70,8 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
   const [folderDraft, setFolderDraft] = useState('');
   const [rawDraft, setRawDraft] = useState('');
   const [message, setMessage] = useState('');
+  const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
+  const parsedDraft = useMemo(() => parseVocabulary(rawDraft), [rawDraft]);
 
   useEffect(() => {
     let isMounted = true;
@@ -113,14 +115,12 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
       return;
     }
 
-    const parsed = parseVocabulary(rawDraft);
-
     if (!titleDraft.trim()) {
       setMessage('Add a file title before saving.');
       return;
     }
 
-    if (parsed.entries.length === 0) {
+    if (parsedDraft.entries.length === 0) {
       setMessage('Keep at least one valid Dutch-Chinese vocabulary line.');
       return;
     }
@@ -132,7 +132,7 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
       const updatedFile = await updateVocabularyFile(fileData.file.id, {
         title: titleDraft.trim(),
         folderId: folderDraft || null,
-        entries: parsed.entries,
+        entries: parsedDraft.entries,
       });
 
       if (!updatedFile) {
@@ -146,6 +146,18 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
       setMessage('The file could not be saved. Try again.');
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  function playEntry(entryId: string, chinese: string) {
+    setActiveEntryId(entryId);
+
+    const didStart = speakChinese(chinese, {
+      onEnd: () => setActiveEntryId(null),
+    });
+
+    if (!didStart) {
+      setActiveEntryId(null);
     }
   }
 
@@ -226,6 +238,13 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
                     onChange={(event) => setRawDraft(event.target.value)}
                     rows={12}
                   />
+                  <p className="form-hint" aria-live="polite">
+                    {parsedDraft.entries.length} valid line
+                    {parsedDraft.entries.length === 1 ? '' : 's'}
+                    {parsedDraft.skippedLines.length > 0
+                      ? `, ${parsedDraft.skippedLines.length} skipped`
+                      : ''}
+                  </p>
                 </div>
               </div>
             ) : (
@@ -235,17 +254,27 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
                     <span className="entry-dutch">{entry.dutch}</span>
                     <div className="entry-chinese-row">
                       <button
-                        className="entry-chinese-button"
+                        className={
+                          activeEntryId === entry.id
+                            ? 'entry-chinese-button entry-chinese-button-active'
+                            : 'entry-chinese-button'
+                        }
                         type="button"
-                        onClick={() => speakChinese(entry.chinese)}
+                        aria-pressed={activeEntryId === entry.id}
+                        onClick={() => playEntry(entry.id, entry.chinese)}
                       >
                         {entry.chinese}
                       </button>
                       <button
-                        className="entry-audio-button"
+                        className={
+                          activeEntryId === entry.id
+                            ? 'entry-audio-button entry-audio-button-active'
+                            : 'entry-audio-button'
+                        }
                         type="button"
                         aria-label={`Play Chinese translation: ${entry.chinese}`}
-                        onClick={() => speakChinese(entry.chinese)}
+                        aria-pressed={activeEntryId === entry.id}
+                        onClick={() => playEntry(entry.id, entry.chinese)}
                       >
                         <SpeakerIcon />
                       </button>

@@ -599,6 +599,8 @@ Stop after this milestone.
 
 ## Milestone 12: Polish and Hardening
 
+Status: Complete.
+
 Goal: improve usability and reliability.
 
 Improve:

@@ -11,6 +11,7 @@ export function DataPage() {
   const replaceInputRef = useRef<HTMLInputElement | null>(null);
   const mergeInputRef = useRef<HTMLInputElement | null>(null);
   const [message, setMessage] = useState('');
+  const [messageTone, setMessageTone] = useState<'error' | 'success'>('error');
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
 
@@ -24,8 +25,10 @@ export function DataPage() {
 
     try {
       await downloadWooordDatabaseExport();
-      setMessage('Database export started.');
+      setMessageTone('success');
+      setMessage('Database export started. Check your downloads.');
     } catch {
+      setMessageTone('error');
       setMessage('The database could not be exported. Try again.');
     } finally {
       setIsExporting(false);
@@ -59,13 +62,16 @@ export function DataPage() {
       );
 
       if (!confirmed) {
+        setMessageTone('success');
         setMessage('Import canceled. Current data was not changed.');
         return;
       }
 
       await replaceWooordDatabase(backup);
-      setMessage('Database import complete.');
+      setMessageTone('success');
+      setMessage('Database import complete. Current data was replaced.');
     } catch (error) {
+      setMessageTone('error');
       setMessage(error instanceof Error ? error.message : 'Import failed.');
     } finally {
       setIsImporting(false);
@@ -88,8 +94,10 @@ export function DataPage() {
       const backup = await readWooordExportFile(file);
 
       await mergeWooordDatabase(backup);
+      setMessageTone('success');
       setMessage('Database added. Current data was preserved.');
     } catch (error) {
+      setMessageTone('error');
       setMessage(error instanceof Error ? error.message : 'Import failed.');
     } finally {
       setIsImporting(false);
@@ -151,7 +159,18 @@ export function DataPage() {
           />
         </div>
 
-        {message ? <p className="form-message">{message}</p> : null}
+        {message ? (
+          <p
+            className={
+              messageTone === 'success'
+                ? 'form-message form-message-success'
+                : 'form-message'
+            }
+            role={messageTone === 'success' ? 'status' : 'alert'}
+          >
+            {message}
+          </p>
+        ) : null}
       </section>
     </main>
   );

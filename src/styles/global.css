@@ -185,6 +185,7 @@ h2 {
 .form-hint {
   margin-bottom: 0;
   color: var(--color-text-muted);
+  font-size: 0.95rem;
 }
 
 .field-label {
@@ -256,6 +257,10 @@ h2 {
   padding: 12px;
   color: var(--color-text);
   background: var(--color-primary-soft);
+}
+
+.form-message-success {
+  border-color: var(--color-success);
 }
 
 .data-actions {
@@ -362,6 +367,12 @@ h2 {
   align-items: center;
   justify-content: center;
   color: var(--color-primary);
+}
+
+.entry-chinese-button-active,
+.entry-audio-button-active {
+  border-color: var(--color-success);
+  color: var(--color-success);
 }
 
 .quick-actions {
@@ -500,5 +511,24 @@ h2 {
 
   .quick-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 380px) {
+  .app-shell {
+    padding-inline: 12px;
+  }
+
+  .home-panel,
+  .content-card {
+    padding-inline: 14px;
+  }
+
+  .page-title {
+    font-size: 2rem;
+  }
+
+  .inline-form {
+    grid-template-columns: 1fr;
   }
 }

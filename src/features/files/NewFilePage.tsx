@@ -1,4 +1,4 @@
-import { type FormEvent, useId, useState } from 'react';
+import { type FormEvent, useId, useMemo, useState } from 'react';
 import { routes } from '../../app/routes';
 import { createVocabularyFile } from '../../db/vocabularyRepository';
 import { parseVocabulary } from './parseVocabulary';
@@ -35,6 +35,7 @@ export function NewFilePage() {
   const [rawText, setRawText] = useState('');
   const [message, setMessage] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const parsedPreview = useMemo(() => parseVocabulary(rawText), [rawText]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -43,9 +44,7 @@ export function NewFilePage() {
       return;
     }
 
-    const parsed = parseVocabulary(rawText);
-
-    if (parsed.entries.length === 0) {
+    if (parsedPreview.entries.length === 0) {
       setMessage('Paste at least one valid Dutch-Chinese vocabulary line.');
       return;
     }
@@ -55,8 +54,8 @@ export function NewFilePage() {
 
     try {
       const savedFile = await createVocabularyFile({
-        title: createFileTitle(parsed.entries[0].dutch),
-        entries: parsed.entries,
+        title: createFileTitle(parsedPreview.entries[0].dutch),
+        entries: parsedPreview.entries,
       });
 
       window.location.assign(routes.file(savedFile.file.id));
@@ -107,6 +106,16 @@ export function NewFilePage() {
           placeholder={'natuurlijk  当然\nbestel订购\nzalig舒服的'}
           rows={12}
         />
+
+        {rawText.trim() ? (
+          <p className="form-hint" aria-live="polite">
+            {parsedPreview.entries.length} valid line
+            {parsedPreview.entries.length === 1 ? '' : 's'}
+            {parsedPreview.skippedLines.length > 0
+              ? `, ${parsedPreview.skippedLines.length} skipped`
+              : ''}
+          </p>
+        ) : null}
 
         {message ? <p className="form-message">{message}</p> : null}
       </form>
