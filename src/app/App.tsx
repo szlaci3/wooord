@@ -4,6 +4,7 @@ import { FileViewPage } from '../features/files/FileViewPage';
 import { NewFilePage } from '../features/files/NewFilePage';
 import { FolderFilesPage } from '../features/folders/FolderFilesPage';
 import { DataPage } from '../features/data/DataPage';
+import { SettingsPage } from '../features/settings/SettingsPage';
 
 function App() {
   const currentRoute = getCurrentRoute(window.location.pathname);
@@ -22,6 +23,10 @@ function App() {
 
   if (currentRoute.name === 'data') {
     return <DataPage />;
+  }
+
+  if (currentRoute.name === 'settings') {
+    return <SettingsPage />;
   }
 
   return <FileListPage />;

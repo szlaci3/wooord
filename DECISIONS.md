@@ -544,3 +544,30 @@ Implications:
 * `src/app/routes.ts` owns the route paths
 * `src/app/App.tsx` renders the current shell view from `window.location.pathname`
 * a router library can be introduced later if nested routes or navigation state become worth the dependency
+
+---
+
+## Decision 20: Use Browser Voices for Dutch and Chinese Audio
+
+The app uses installed browser/device Web Speech voices for both Dutch and Chinese playback.
+
+Reason:
+
+* keeps the app static and backend-free
+* avoids paid text-to-speech APIs
+* lets users choose a preferred voice when their device exposes multiple voices
+* supports regional voices such as `zh-TW`, `nl-NL`, and `nl-BE` when available
+
+Implementation decision:
+
+* store selected Dutch and Chinese `voiceURI` values in localStorage
+* use `window.speechSynthesis.getVoices()` and `voiceschanged`
+* if a selected voice is unavailable later, fall back by language
+* Chinese fallback order is `zh-CN`, `zh-TW`, `zh-HK`, then any `zh-*`
+* Dutch fallback order is `nl-BE`, `nl-NL`, then any `nl-*`
+
+Implications:
+
+* voice preferences are local to the browser/device
+* voice availability depends on the operating system and browser
+* playback should still attempt speech with language fallback if no matching voice is exposed

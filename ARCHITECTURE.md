@@ -16,7 +16,8 @@ Primary responsibilities:
 * store vocabulary files locally
 * organize files into folders
 * display saved files
-* play Chinese translations aloud
+* play Dutch expressions and Chinese translations aloud
+* persist browser voice preferences locally
 * export/import/merge the local Dexie database
 
 ---
@@ -53,10 +54,11 @@ Current implementation:
 
 * `src/app/routes.ts` defines the initial route constants.
 * `src/app/App.tsx` uses a lightweight path resolver for the first app shell.
-* `/`, `/files/new`, `/files/:fileId`, `/folders/:folderId`, and `/data` render inspectable shell or feature views.
+* `/`, `/files/new`, `/files/:fileId`, `/folders/:folderId`, `/data`, and `/settings` render inspectable shell or feature views.
 * `src/features/files/FileListPage.tsx` owns the landing page file and folder lists.
 * `src/features/files/FileViewPage.tsx` owns the opened file view and listenable Chinese entries.
 * `src/features/folders/FolderFilesPage.tsx` owns folder-specific file lists.
+* `src/features/settings/SettingsPage.tsx` owns voice selection.
 
 A dedicated router library can be added later if route complexity justifies it.
 
@@ -93,6 +95,12 @@ This can also be implemented as edit mode inside the file view page if simpler.
 ```
 
 Data page for Dexie export/import/merge.
+
+```txt
+/settings
+```
+
+Settings page for browser Web Speech voice preferences.
 
 ```txt id="pisvjv"
 /folders/:folderId
@@ -472,32 +480,52 @@ src/features/files/speech.ts
 
 Use the Web Speech API.
 
-Basic behavior:
+Current behavior:
 
 ```ts id="6g9tih"
-export function speakChinese(text: string) {
-  if (!('speechSynthesis' in window)) {
-    return;
-  }
-
-  window.speechSynthesis.cancel();
-
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'zh-CN';
-
-  window.speechSynthesis.speak(utterance);
-}
+speakDutch(text)
+speakChinese(text)
 ```
 
 Do not make audio failure fatal.
 
 The app should remain usable even if speech synthesis is unavailable.
 
+Voice preferences are stored in `localStorage` by `src/features/settings/voicePreferences.ts`.
+
+Voice selection logic lives in `src/features/settings/voiceSelection.ts`:
+
+* Chinese fallback order: `zh-CN`, `zh-TW`, `zh-HK`, then any `zh-*` voice
+* Dutch fallback order: `nl-BE`, `nl-NL`, then any `nl-*` voice
+* if a previously selected voice is unavailable, playback falls back to the best available language match
+
 Current implementation:
 
-* `src/features/files/speech.ts` exports `speakChinese`.
-* `src/features/files/FileViewPage.tsx` calls `speakChinese` from the Chinese text and speaker icon.
+* `src/features/files/speech.ts` exports `speakChinese` and `speakDutch`.
+* `src/features/files/FileViewPage.tsx` calls these helpers from Dutch and Chinese text/audio buttons.
 * The opened file view shows a small top edit icon; edit behavior is implemented in the edit milestone.
+
+---
+
+## Settings Page
+
+Recommended route:
+
+```txt
+/settings
+```
+
+The Settings page lets the user choose installed browser voices for:
+
+* Dutch playback
+* Chinese playback
+
+Current implementation:
+
+* `src/features/settings/SettingsPage.tsx` loads voices from `window.speechSynthesis.getVoices()`.
+* `voiceschanged` refreshes the voice list when browsers load voices asynchronously.
+* selected `voiceURI` values are persisted in `localStorage`.
+* options display voice name and language code.
 
 ---
 

@@ -95,6 +95,9 @@ export function FileListPage() {
           <a className="secondary-action" href={routes.data}>
             Data
           </a>
+          <a className="secondary-action" href={routes.settings}>
+            Settings
+          </a>
         </nav>
       </section>
 

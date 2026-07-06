@@ -630,6 +630,53 @@ Stop after this milestone.
 
 ---
 
+## Post-MVP Feature: Voice Settings and Dutch Audio
+
+Status: Complete.
+
+Goal: improve audio playback by allowing the user to choose voices for both Chinese and Dutch.
+
+Build:
+
+- Settings page
+- route to Settings page
+- navigation link to Settings page
+- browser voice loading through the Web Speech API
+- Chinese voice selection
+- Dutch voice selection
+- persisted selected voice preferences
+- Chinese playback using the selected Chinese voice
+- Dutch playback using the selected Dutch voice
+- audible Dutch words in the file view
+- support for Taiwan Chinese voices when available, especially `zh-TW`
+- support for Dutch voices when available, especially `nl-NL` and `nl-BE`
+
+Rules:
+
+- Use installed browser/device voices from `window.speechSynthesis.getVoices()`.
+- Do not use a paid TTS API.
+- Do not add a backend.
+- Do not make external network calls for audio.
+- If the selected voice is unavailable later, fall back to the best available language match.
+- Chinese fallback order should prefer `zh-CN`, then `zh-TW`, then `zh-HK`, then any `zh-*` voice.
+- Dutch fallback order should prefer `nl-BE`, then `nl-NL`, then any `nl-*` voice.
+- The Settings page should clearly show voice name and language code.
+- The Dutch word and Chinese translation should both be audible from the opened file page.
+
+Acceptance criteria:
+
+- user can open Settings
+- user can choose a Chinese voice
+- user can choose a Dutch voice
+- selected voices persist after refresh
+- Chinese audio uses the selected Chinese voice when available
+- Dutch audio uses the selected Dutch voice when available
+- Taiwan Chinese voices are selectable when the browser exposes them
+- Dutch words in vocabulary entries are listenable
+- app remains runnable
+
+---
+
 ## Later Ideas
 
 Do not build these in the first milestones unless explicitly requested.

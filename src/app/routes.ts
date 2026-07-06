@@ -2,6 +2,7 @@ export const routes = {
   home: '/',
   newFile: '/files/new',
   data: '/data',
+  settings: '/settings',
   file: (fileId: string) => `/files/${fileId}`,
   folder: (folderId: string) => `/folders/${folderId}`,
 } as const;
@@ -10,6 +11,7 @@ export type AppRoute =
   | { name: 'home' }
   | { name: 'newFile' }
   | { name: 'data' }
+  | { name: 'settings' }
   | { name: 'file'; fileId: string }
   | { name: 'folder'; folderId: string };
 
@@ -20,6 +22,10 @@ export function getCurrentRoute(pathname: string): AppRoute {
 
   if (pathname === routes.data) {
     return { name: 'data' };
+  }
+
+  if (pathname === routes.settings) {
+    return { name: 'settings' };
   }
 
   if (pathname.startsWith('/files/')) {

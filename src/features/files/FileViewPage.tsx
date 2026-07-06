@@ -6,7 +6,7 @@ import {
   updateVocabularyFile,
 } from '../../db/vocabularyRepository';
 import { parseVocabulary } from './parseVocabulary';
-import { speakChinese } from './speech';
+import { speakChinese, speakDutch } from './speech';
 import type { Folder, VocabularyFileWithEntries } from './types';
 
 type FileViewPageProps = {
@@ -70,7 +70,7 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
   const [folderDraft, setFolderDraft] = useState('');
   const [rawDraft, setRawDraft] = useState('');
   const [message, setMessage] = useState('');
-  const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
+  const [activeAudioId, setActiveAudioId] = useState<string | null>(null);
   const parsedDraft = useMemo(() => parseVocabulary(rawDraft), [rawDraft]);
 
   useEffect(() => {
@@ -149,15 +149,13 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
     }
   }
 
-  function playEntry(entryId: string, chinese: string) {
-    setActiveEntryId(entryId);
+  function playEntry(audioId: string, speak: () => boolean) {
+    setActiveAudioId(audioId);
 
-    const didStart = speakChinese(chinese, {
-      onEnd: () => setActiveEntryId(null),
-    });
+    const didStart = speak();
 
     if (!didStart) {
-      setActiveEntryId(null);
+      setActiveAudioId(null);
     }
   }
 
@@ -251,32 +249,84 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
               <ol className="entry-list">
                 {fileData.entries.map((entry) => (
                   <li key={entry.id} className="entry-item">
-                    <span className="entry-dutch">{entry.dutch}</span>
-                    <button
-                      className={
-                        activeEntryId === entry.id
-                          ? 'entry-audio-button entry-audio-button-active'
-                          : 'entry-audio-button'
-                      }
-                      type="button"
-                      aria-label={`Play Chinese translation: ${entry.chinese}`}
-                      aria-pressed={activeEntryId === entry.id}
-                      onClick={() => playEntry(entry.id, entry.chinese)}
-                    >
-                      <SpeakerIcon />
-                    </button>
-                    <button
-                      className={
-                        activeEntryId === entry.id
-                          ? 'entry-chinese-button entry-chinese-button-active'
-                          : 'entry-chinese-button'
-                      }
-                      type="button"
-                      aria-pressed={activeEntryId === entry.id}
-                      onClick={() => playEntry(entry.id, entry.chinese)}
-                    >
-                      {entry.chinese}
-                    </button>
+                    <div className="entry-language-row">
+                      <button
+                        className={
+                          activeAudioId === `${entry.id}:dutch`
+                            ? 'entry-dutch-button entry-dutch-button-active'
+                            : 'entry-dutch-button'
+                        }
+                        type="button"
+                        aria-pressed={activeAudioId === `${entry.id}:dutch`}
+                        onClick={() =>
+                          playEntry(`${entry.id}:dutch`, () =>
+                            speakDutch(entry.dutch, {
+                              onEnd: () => setActiveAudioId(null),
+                            }),
+                          )
+                        }
+                      >
+                        {entry.dutch}
+                      </button>
+                      <button
+                        className={
+                          activeAudioId === `${entry.id}:dutch`
+                            ? 'entry-audio-button entry-audio-button-active'
+                            : 'entry-audio-button'
+                        }
+                        type="button"
+                        aria-label={`Play Dutch expression: ${entry.dutch}`}
+                        aria-pressed={activeAudioId === `${entry.id}:dutch`}
+                        onClick={() =>
+                          playEntry(`${entry.id}:dutch`, () =>
+                            speakDutch(entry.dutch, {
+                              onEnd: () => setActiveAudioId(null),
+                            }),
+                          )
+                        }
+                      >
+                        <SpeakerIcon />
+                      </button>
+                    </div>
+                    <div className="entry-language-row">
+                      <button
+                        className={
+                          activeAudioId === `${entry.id}:chinese`
+                            ? 'entry-chinese-button entry-chinese-button-active'
+                            : 'entry-chinese-button'
+                        }
+                        type="button"
+                        aria-pressed={activeAudioId === `${entry.id}:chinese`}
+                        onClick={() =>
+                          playEntry(`${entry.id}:chinese`, () =>
+                            speakChinese(entry.chinese, {
+                              onEnd: () => setActiveAudioId(null),
+                            }),
+                          )
+                        }
+                      >
+                        {entry.chinese}
+                      </button>
+                      <button
+                        className={
+                          activeAudioId === `${entry.id}:chinese`
+                            ? 'entry-audio-button entry-audio-button-active'
+                            : 'entry-audio-button'
+                        }
+                        type="button"
+                        aria-label={`Play Chinese translation: ${entry.chinese}`}
+                        aria-pressed={activeAudioId === `${entry.id}:chinese`}
+                        onClick={() =>
+                          playEntry(`${entry.id}:chinese`, () =>
+                            speakChinese(entry.chinese, {
+                              onEnd: () => setActiveAudioId(null),
+                            }),
+                          )
+                        }
+                      >
+                        <SpeakerIcon />
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ol>

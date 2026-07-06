@@ -54,11 +54,13 @@ natuurlijk — 2026-07-05
 
 The user can open a file and see its vocabulary entries.
 
-Chinese expressions are clickable/listenable. When the user taps a Chinese expression or its audio icon, the app reads the Chinese expression aloud.
+Dutch and Chinese expressions are clickable/listenable. When the user taps a Dutch or Chinese expression, or its audio icon, the app reads that expression aloud with the selected voice when available.
 
 The user can organize files into folders.
 
 The user can export, import, or merge the local Dexie database from a dedicated Data page.
+
+The user can choose Dutch and Chinese speech voices from a dedicated Settings page.
 
 ---
 
@@ -151,6 +153,7 @@ The landing page shows:
 * action to create a new file
 * action to create a new folder
 * action/link to open the Data page
+* action/link to open the Settings page
 * list of folders
 * list of existing files
 
@@ -187,9 +190,9 @@ The opened file screen shows:
 * Chinese translation
 * audio/listen icon or tappable Chinese expression
 
-Chinese expressions are listenable.
+Dutch and Chinese expressions are listenable.
 
-Tapping the Chinese expression or audio icon should trigger speech synthesis.
+Tapping the Dutch or Chinese expression, or its audio icon, should trigger speech synthesis.
 
 The page should have a small icon-only edit button near the top.
 
@@ -382,11 +385,23 @@ Recommended export shape:
 
 Use the Web Speech API.
 
-For Chinese speech:
+The app lets the user choose a Dutch voice and a Chinese voice in Settings. Store these voice preferences locally in browser storage.
+
+For Chinese speech fallback:
 
 ```ts
 utterance.lang = 'zh-CN';
 ```
+
+Chinese voice fallback order should prefer `zh-CN`, then `zh-TW`, then `zh-HK`, then any `zh-*` voice.
+
+For Dutch speech fallback:
+
+```ts
+utterance.lang = 'nl-BE';
+```
+
+Dutch voice fallback order should prefer `nl-BE`, then `nl-NL`, then any `nl-*` voice.
 
 If no Chinese voice is available, still attempt speech synthesis with `zh-CN`.
 
