@@ -558,6 +558,8 @@ Stop after this milestone.
 
 ## Milestone 11: Add Existing Database, Preserve Current Data
 
+Status: Complete.
+
 Goal: merge a backup into the current database without deleting current data.
 
 Add button:

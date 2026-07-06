@@ -88,6 +88,18 @@ function isVocabularyEntry(value: unknown): value is VocabularyEntry {
   );
 }
 
+function assertUniqueIds(records: { id: string }[], label: string) {
+  const ids = new Set<string>();
+
+  for (const record of records) {
+    if (ids.has(record.id)) {
+      throw new Error(`Backup file contains duplicate ${label} IDs.`);
+    }
+
+    ids.add(record.id);
+  }
+}
+
 export function validateWooordDatabaseExport(
   value: unknown,
 ): WooordDatabaseExport {
@@ -115,6 +127,10 @@ export function validateWooordDatabaseExport(
   ) {
     throw new Error('Backup file contains malformed wooord data.');
   }
+
+  assertUniqueIds(folders, 'folder');
+  assertUniqueIds(files, 'file');
+  assertUniqueIds(entries, 'entry');
 
   const folderIds = new Set(folders.map((folder) => folder.id));
   const fileIds = new Set(files.map((file) => file.id));
@@ -171,6 +187,76 @@ export async function replaceWooordDatabase(backup: WooordDatabaseExport) {
 
     if (backup.data.entries.length > 0) {
       await db.entries.bulkAdd(backup.data.entries);
+    }
+  });
+}
+
+function createId() {
+  return crypto.randomUUID();
+}
+
+function createUniqueId(existingIds: Set<string>) {
+  let newId = createId();
+
+  while (existingIds.has(newId)) {
+    newId = createId();
+  }
+
+  existingIds.add(newId);
+  return newId;
+}
+
+export async function mergeWooordDatabase(backup: WooordDatabaseExport) {
+  await db.transaction('rw', db.folders, db.files, db.entries, async () => {
+    const [existingFolders, existingFiles, existingEntries] =
+      await Promise.all([
+        db.folders.toArray(),
+        db.files.toArray(),
+        db.entries.toArray(),
+      ]);
+
+    const folderIds = new Set(existingFolders.map((folder) => folder.id));
+    const fileIds = new Set(existingFiles.map((file) => file.id));
+    const entryIds = new Set(existingEntries.map((entry) => entry.id));
+    const folderIdMap = new Map<string, string>();
+    const fileIdMap = new Map<string, string>();
+
+    const folders = backup.data.folders.map((folder) => {
+      const id = createUniqueId(folderIds);
+
+      folderIdMap.set(folder.id, id);
+
+      return { ...folder, id };
+    });
+
+    const files = backup.data.files.map((file) => {
+      const id = createUniqueId(fileIds);
+
+      fileIdMap.set(file.id, id);
+
+      return {
+        ...file,
+        id,
+        folderId: file.folderId ? folderIdMap.get(file.folderId) : null,
+      };
+    });
+
+    const entries = backup.data.entries.map((entry) => ({
+      ...entry,
+      id: createUniqueId(entryIds),
+      fileId: fileIdMap.get(entry.fileId) ?? entry.fileId,
+    }));
+
+    if (folders.length > 0) {
+      await db.folders.bulkAdd(folders);
+    }
+
+    if (files.length > 0) {
+      await db.files.bulkAdd(files);
+    }
+
+    if (entries.length > 0) {
+      await db.entries.bulkAdd(entries);
     }
   });
 }
