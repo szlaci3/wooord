@@ -1,6 +1,7 @@
 import { getCurrentRoute } from './routes';
 import { FileListPage } from '../features/files/FileListPage';
 import { FileViewPage } from '../features/files/FileViewPage';
+import { FlashcardsPage } from '../features/files/FlashcardsPage';
 import { NewFilePage } from '../features/files/NewFilePage';
 import { FolderFilesPage } from '../features/folders/FolderFilesPage';
 import { DataPage } from '../features/data/DataPage';
@@ -15,6 +16,10 @@ function App() {
 
   if (currentRoute.name === 'file') {
     return <FileViewPage fileId={currentRoute.fileId} />;
+  }
+
+  if (currentRoute.name === 'flashcards') {
+    return <FlashcardsPage fileId={currentRoute.fileId} />;
   }
 
   if (currentRoute.name === 'folder') {

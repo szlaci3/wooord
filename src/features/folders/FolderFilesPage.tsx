@@ -76,12 +76,20 @@ export function FolderFilesPage({ folderId }: FolderFilesPageProps) {
               <ul className="file-list">
                 {files.map((file) => (
                   <li key={file.id}>
-                    <a className="file-list-link" href={routes.file(file.id)}>
-                      <span className="file-list-title">{file.title}</span>
-                      <span className="file-list-meta">
-                        {formatDisplayDate(file.createdAt)}
-                      </span>
-                    </a>
+                    <div className="file-list-item">
+                      <a className="file-list-link" href={routes.file(file.id)}>
+                        <span className="file-list-title">{file.title}</span>
+                        <span className="file-list-meta">
+                          {formatDisplayDate(file.createdAt)}
+                        </span>
+                      </a>
+                      <a
+                        className="file-list-study-link"
+                        href={routes.flashcards(file.id)}
+                      >
+                        Flashcards
+                      </a>
+                    </div>
                   </li>
                 ))}
               </ul>
