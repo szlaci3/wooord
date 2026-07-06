@@ -11,7 +11,7 @@ export function speakChinese(text: string, options: SpeakChineseOptions = {}) {
   window.speechSynthesis.cancel();
 
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'zh-CN';
+  utterance.lang = 'zh-TW';//CN
   utterance.onstart = options.onStart ?? null;
   utterance.onend = options.onEnd ?? null;
   utterance.onerror = options.onEnd ?? null;
