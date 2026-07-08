@@ -1,8 +1,11 @@
 const storageKey = 'wooord.voicePreferences';
 
+export type AudioSource = 'speechSynthesis' | 'wiktionary';
+
 export type VoicePreferences = {
   dutchVoiceURI?: string;
   chineseVoiceURI?: string;
+  audioSource?: AudioSource;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -11,6 +14,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function toOptionalString(value: unknown) {
   return typeof value === 'string' && value ? value : undefined;
+}
+
+function toAudioSource(value: unknown): AudioSource | undefined {
+  return value === 'wiktionary' || value === 'speechSynthesis'
+    ? value
+    : undefined;
 }
 
 export function getVoicePreferences(): VoicePreferences {
@@ -30,6 +39,7 @@ export function getVoicePreferences(): VoicePreferences {
     return {
       dutchVoiceURI: toOptionalString(parsed.dutchVoiceURI),
       chineseVoiceURI: toOptionalString(parsed.chineseVoiceURI),
+      audioSource: toAudioSource(parsed.audioSource),
     };
   } catch {
     return {};
@@ -39,4 +49,3 @@ export function getVoicePreferences(): VoicePreferences {
 export function saveVoicePreferences(preferences: VoicePreferences) {
   window.localStorage.setItem(storageKey, JSON.stringify(preferences));
 }
-

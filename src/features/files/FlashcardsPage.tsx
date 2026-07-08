@@ -118,9 +118,26 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
   }
 
   function goToNextCard() {
-    setCurrentIndex((index) =>
-      entries.length > 0 ? (index + 1) % entries.length : 0,
-    );
+    if (entries.length === 0) {
+      setCurrentIndex(0);
+      setIsRevealed(false);
+      setActiveAudioId(null);
+      return;
+    }
+
+    if (currentIndex >= entries.length - 1) {
+      if (window.confirm('Go to start?')) {
+        setCurrentIndex(0);
+        setIsRevealed(false);
+        setActiveAudioId(null);
+      } else if (fileData) {
+        window.location.href = routes.file(fileData.file.id);
+      }
+
+      return;
+    }
+
+    setCurrentIndex((index) => index + 1);
     setIsRevealed(false);
     setActiveAudioId(null);
   }
