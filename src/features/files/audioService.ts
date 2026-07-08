@@ -12,6 +12,9 @@ export type PlayAudioOptions = {
 const wiktionaryApiUrl = 'https://en.wiktionary.org/w/api.php';
 const commonsRedirectBaseUrl =
   'https://commons.wikimedia.org/wiki/Special:Redirect/file/';
+const persistentLookupCacheKey = 'wooord.wiktionaryAudioLookupCache.v1';
+const audioResponseCacheName = 'wooord-wiktionary-audio-v1';
+const maxPersistentLookupEntries = 1000;
 
 const fallbackLanguageByVoiceLanguage: Record<VoiceLanguage, string> = {
   chinese: 'zh-CN',
@@ -25,6 +28,8 @@ const wiktionaryLanguageCodeByVoiceLanguage: Record<VoiceLanguage, string> = {
 
 const wiktionaryAudioCache = new Map<string, Promise<string | null>>();
 let activeHtmlAudio: HTMLAudioElement | null = null;
+let activeObjectUrl: string | null = null;
+let persistentLookupCache: Record<string, string | null> | null = null;
 
 function stopCurrentAudio() {
   window.speechSynthesis?.cancel();
@@ -33,6 +38,11 @@ function stopCurrentAudio() {
     activeHtmlAudio.pause();
     activeHtmlAudio.src = '';
     activeHtmlAudio = null;
+  }
+
+  if (activeObjectUrl) {
+    URL.revokeObjectURL(activeObjectUrl);
+    activeObjectUrl = null;
   }
 }
 
@@ -79,6 +89,72 @@ function getWiktionaryCacheKey(text: string, language: VoiceLanguage) {
   return `${language}:${text.toLocaleLowerCase()}`;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function loadPersistentLookupCache() {
+  if (persistentLookupCache) {
+    return persistentLookupCache;
+  }
+
+  try {
+    const storedValue = window.localStorage.getItem(persistentLookupCacheKey);
+    const parsed: unknown = storedValue ? JSON.parse(storedValue) : {};
+
+    if (!isRecord(parsed)) {
+      persistentLookupCache = {};
+      return persistentLookupCache;
+    }
+
+    persistentLookupCache = Object.fromEntries(
+      Object.entries(parsed).filter(
+        ([, value]) => typeof value === 'string' || value === null,
+      ),
+    ) as Record<string, string | null>;
+  } catch {
+    persistentLookupCache = {};
+  }
+
+  return persistentLookupCache;
+}
+
+function savePersistentLookupCache() {
+  if (!persistentLookupCache) {
+    return;
+  }
+
+  try {
+    const entries = Object.entries(persistentLookupCache).slice(
+      -maxPersistentLookupEntries,
+    );
+    persistentLookupCache = Object.fromEntries(entries);
+    window.localStorage.setItem(
+      persistentLookupCacheKey,
+      JSON.stringify(persistentLookupCache),
+    );
+  } catch {
+    // Ignore storage quota and private browsing failures.
+  }
+}
+
+function getPersistentLookupCacheValue(cacheKey: string) {
+  const cache = loadPersistentLookupCache();
+
+  return Object.prototype.hasOwnProperty.call(cache, cacheKey)
+    ? cache[cacheKey]
+    : undefined;
+}
+
+function setPersistentLookupCacheValue(
+  cacheKey: string,
+  audioUrl: string | null,
+) {
+  const cache = loadPersistentLookupCache();
+  cache[cacheKey] = audioUrl;
+  savePersistentLookupCache();
+}
+
 function splitTemplateParts(template: string) {
   return template
     .slice(2, -2)
@@ -115,10 +191,39 @@ function getAudioFileFromTemplate(
   return isAudioFileName(fileName) ? fileName : null;
 }
 
+function getChineseAudioFileFromPronunciationTemplate(template: string) {
+  const caMatch = template.match(/(?:^|\n)\s*\|\s*ca\s*=\s*([^\n|]+)/i);
+  const fileName = normalizeAudioFileName(caMatch?.[1] ?? '');
+
+  return isAudioFileName(fileName) ? fileName : null;
+}
+
+function findChinesePronunciationAudioFile(wikitext: string) {
+  const pronunciationTemplates = wikitext.match(/\{\{zh-pron[\s\S]*?\n}}/gi) ?? [];
+
+  for (const template of pronunciationTemplates) {
+    const fileName = getChineseAudioFileFromPronunciationTemplate(template);
+
+    if (fileName) {
+      return fileName;
+    }
+  }
+
+  return null;
+}
+
 function findWiktionaryAudioFile(
   wikitext: string,
   language: VoiceLanguage,
 ) {
+  if (language === 'chinese') {
+    const chineseAudioFile = findChinesePronunciationAudioFile(wikitext);
+
+    if (chineseAudioFile) {
+      return chineseAudioFile;
+    }
+  }
+
   const wiktionaryLanguageCode =
     wiktionaryLanguageCodeByVoiceLanguage[language];
   const audioTemplates = wikitext.match(/\{\{audio\|[^{}]+}}/gi) ?? [];
@@ -198,25 +303,148 @@ function getCachedWiktionaryAudioUrl(
     return cachedValue;
   }
 
-  const audioUrl = fetchWiktionaryAudioUrl(text, language);
+  const persistentValue = getPersistentLookupCacheValue(cacheKey);
+
+  if (persistentValue !== undefined) {
+    const audioUrl = Promise.resolve(persistentValue);
+    wiktionaryAudioCache.set(cacheKey, audioUrl);
+    return audioUrl;
+  }
+
+  const audioUrl = fetchWiktionaryAudioUrl(text, language).then((result) => {
+    setPersistentLookupCacheValue(cacheKey, result);
+    return result;
+  });
   wiktionaryAudioCache.set(cacheKey, audioUrl);
   return audioUrl;
 }
 
-async function playHtmlAudio(url: string, options: PlayAudioOptions) {
-  const audio = new Audio(url);
-  activeHtmlAudio = audio;
+function canUseCacheStorage() {
+  return 'caches' in window;
+}
 
-  audio.onended = options.onEnd ?? null;
-  audio.onerror = options.onEnd ?? null;
+async function cacheAudioResponse(url: string) {
+  if (!canUseCacheStorage()) {
+    return;
+  }
+
+  try {
+    const request = new Request(url, { mode: 'cors' });
+    const cache = await window.caches.open(audioResponseCacheName);
+    const cachedResponse = await cache.match(request);
+
+    if (cachedResponse) {
+      return;
+    }
+
+    const response = await fetch(request);
+
+    if (response.ok) {
+      await cache.put(request, response.clone());
+    }
+  } catch {
+    // Network and CORS failures should only disable preloading, not playback.
+  }
+}
+
+async function getCachedAudioObjectUrl(url: string) {
+  if (!canUseCacheStorage()) {
+    return null;
+  }
+
+  try {
+    const request = new Request(url, { mode: 'cors' });
+    const cache = await window.caches.open(audioResponseCacheName);
+    let response = await cache.match(request);
+
+    if (!response) {
+      response = await fetch(request);
+
+      if (response.ok) {
+        await cache.put(request, response.clone());
+      }
+    }
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return URL.createObjectURL(await response.blob());
+  } catch {
+    return null;
+  }
+}
+
+async function playHtmlAudio(url: string, options: PlayAudioOptions) {
+  const objectUrl = await getCachedAudioObjectUrl(url);
+  const audio = new Audio(objectUrl ?? url);
+  activeHtmlAudio = audio;
+  activeObjectUrl = objectUrl;
+  let didFinish = false;
+
+  function finishAudio() {
+    if (didFinish) {
+      return;
+    }
+
+    didFinish = true;
+
+    if (activeObjectUrl === objectUrl) {
+      activeObjectUrl = null;
+    }
+
+    if (objectUrl) {
+      URL.revokeObjectURL(objectUrl);
+    }
+
+    options.onEnd?.();
+  }
+
+  audio.onended = finishAudio;
+  audio.onerror = finishAudio;
 
   try {
     options.onStart?.();
     await audio.play();
     return true;
   } catch {
-    options.onEnd?.();
+    finishAudio();
     return false;
+  }
+}
+
+export function preloadLanguageAudio(text: string, language: VoiceLanguage) {
+  const preferences = getVoicePreferences();
+
+  if (preferences.audioSource !== 'wiktionary') {
+    return;
+  }
+
+  const lookupText = normalizeLookupText(text);
+
+  if (!lookupText) {
+    return;
+  }
+
+  void getCachedWiktionaryAudioUrl(lookupText, language).then((audioUrl) => {
+    if (audioUrl) {
+      void cacheAudioResponse(audioUrl);
+    }
+  });
+}
+
+export function preloadVocabularyAudios(
+  entries: Array<{ dutch: string; chinese: string }>,
+) {
+  const preferences = getVoicePreferences();
+
+  if (preferences.audioSource !== 'wiktionary') {
+    return;
+  }
+
+  for (const entry of entries) {
+    preloadLanguageAudio(entry.dutch, 'dutch');
+    preloadLanguageAudio(entry.chinese, 'chinese');
   }
 }
 

@@ -6,6 +6,7 @@ import {
   updateVocabularyFile,
 } from '../../db/vocabularyRepository';
 import { useUiLanguage } from '../settings/uiLanguage';
+import { preloadVocabularyAudios } from './audioService';
 import { parseVocabulary } from './parseVocabulary';
 import { speakChinese, speakDutch } from './speech';
 import type { Folder, VocabularyFileWithEntries } from './types';
@@ -94,6 +95,10 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
         setIsEditing(false);
         setMessage('');
       }
+
+      if (savedFile) {
+        preloadVocabularyAudios(savedFile.entries);
+      }
     }
 
     void loadFile();
@@ -147,6 +152,7 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
 
       setFileData(updatedFile);
       setIsEditing(false);
+      preloadVocabularyAudios(updatedFile.entries);
     } catch {
       setMessage(t('fileSaveError'));
     } finally {

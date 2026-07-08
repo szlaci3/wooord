@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { routes } from '../../app/routes';
 import { getVocabularyFile } from '../../db/vocabularyRepository';
 import { useUiLanguage } from '../settings/uiLanguage';
+import { preloadVocabularyAudios } from './audioService';
 import { speakChinese, speakDutch } from './speech';
 import type { VocabularyEntry, VocabularyFileWithEntries } from './types';
 
@@ -74,6 +75,10 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
 
         if (isMounted) {
           setFileData(savedFile);
+        }
+
+        if (savedFile) {
+          preloadVocabularyAudios(savedFile.entries);
         }
       } catch {
         if (isMounted) {
