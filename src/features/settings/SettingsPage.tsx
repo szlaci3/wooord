@@ -114,6 +114,27 @@ export function SettingsPage() {
           </p>
         ) : null}
 
+        <label className="settings-field" htmlFor="audio-source">
+          <span>{t('audioSource')}</span>
+          <select
+            id="audio-source"
+            className="select-input"
+            value={preferences.audioSource ?? 'speechSynthesis'}
+            onChange={(event) =>
+              setPreferences((currentPreferences) => ({
+                ...currentPreferences,
+                audioSource:
+                  event.target.value === 'wiktionary'
+                    ? 'wiktionary'
+                    : 'speechSynthesis',
+              }))
+            }
+          >
+            <option value="speechSynthesis">{t('speechSynthesisAudio')}</option>
+            <option value="wiktionary">{t('wiktionaryAudio')}</option>
+          </select>
+        </label>
+
         <label className="settings-field" htmlFor="dutch-voice">
           <span>{t('dutchVoice')}</span>
           <select
