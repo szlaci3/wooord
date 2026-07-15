@@ -278,7 +278,9 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
                 onClick={playPromptAudio}
               >
                 <SpeakerIcon />
-                {t('prompt')}
+                {direction === 'dutch-to-chinese'
+                  ? t('dutch')
+                  : t('chinese')}
               </button>
               <button
                 className={
@@ -291,7 +293,9 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
                 onClick={playAnswerAudio}
               >
                 <SpeakerIcon />
-                {t('answer')}
+                {direction === 'dutch-to-chinese'
+                  ? t('chinese')
+                  : t('dutch')}
               </button>
             </div>
 

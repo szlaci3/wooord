@@ -12,8 +12,8 @@ export type PlayAudioOptions = {
 const wiktionaryApiUrl = 'https://en.wiktionary.org/w/api.php';
 const commonsRedirectBaseUrl =
   'https://commons.wikimedia.org/wiki/Special:Redirect/file/';
-const persistentLookupCacheKey = 'wooord.wiktionaryAudioLookupCache.v1';
-const audioResponseCacheName = 'wooord-wiktionary-audio-v1';
+const persistentLookupCacheKey = 'wooord.wiktionaryAudioLookupCache.v2';
+const audioResponseCacheName = 'wooord-wiktionary-audio-v2';
 const maxPersistentLookupEntries = 1000;
 
 const fallbackLanguageByVoiceLanguage: Record<VoiceLanguage, string> = {
@@ -191,18 +191,29 @@ function getAudioFileFromTemplate(
   return isAudioFileName(fileName) ? fileName : null;
 }
 
-function getChineseAudioFileFromPronunciationTemplate(template: string) {
-  const caMatch = template.match(/(?:^|\n)\s*\|\s*ca\s*=\s*([^\n|]+)/i);
-  const fileName = normalizeAudioFileName(caMatch?.[1] ?? '');
+function getChineseAudioFileFromPronunciationTemplate(
+  template: string,
+  audioParameter: 'ma' | 'ca',
+) {
+  const audioMatch = template.match(
+    new RegExp(`(?:^|\\n)\\s*\\|\\s*${audioParameter}\\s*=\\s*([^\\n|]+)`, 'i'),
+  );
+  const fileName = normalizeAudioFileName(audioMatch?.[1] ?? '');
 
   return isAudioFileName(fileName) ? fileName : null;
 }
 
-function findChinesePronunciationAudioFile(wikitext: string) {
+function findChinesePronunciationAudioFile(
+  wikitext: string,
+  audioParameter: 'ma' | 'ca',
+) {
   const pronunciationTemplates = wikitext.match(/\{\{zh-pron[\s\S]*?\n}}/gi) ?? [];
 
   for (const template of pronunciationTemplates) {
-    const fileName = getChineseAudioFileFromPronunciationTemplate(template);
+    const fileName = getChineseAudioFileFromPronunciationTemplate(
+      template,
+      audioParameter,
+    );
 
     if (fileName) {
       return fileName;
@@ -217,10 +228,10 @@ function findWiktionaryAudioFile(
   language: VoiceLanguage,
 ) {
   if (language === 'chinese') {
-    const chineseAudioFile = findChinesePronunciationAudioFile(wikitext);
+    const mandarinAudioFile = findChinesePronunciationAudioFile(wikitext, 'ma');
 
-    if (chineseAudioFile) {
-      return chineseAudioFile;
+    if (mandarinAudioFile) {
+      return mandarinAudioFile;
     }
   }
 
@@ -237,6 +248,10 @@ function findWiktionaryAudioFile(
     if (fileName) {
       return fileName;
     }
+  }
+
+  if (language === 'chinese') {
+    return findChinesePronunciationAudioFile(wikitext, 'ma');
   }
 
   return null;
