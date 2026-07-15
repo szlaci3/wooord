@@ -85,6 +85,15 @@ function normalizeLookupText(text: string) {
     .trim();
 }
 
+export function splitChineseAudioText(text: string) {
+  const parts = text
+    .split('，')
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  return parts.length > 0 ? parts : [text];
+}
+
 function getWiktionaryCacheKey(text: string, language: VoiceLanguage) {
   return `${language}:${text.toLocaleLowerCase()}`;
 }
@@ -457,7 +466,9 @@ export function preloadVocabularyAudios(
 ) {
   for (const entry of entries) {
     preloadLanguageAudio(entry.dutch, 'dutch');
-    preloadLanguageAudio(entry.chinese, 'chinese');
+    for (const chinesePart of splitChineseAudioText(entry.chinese)) {
+      preloadLanguageAudio(chinesePart, 'chinese');
+    }
   }
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { routes } from '../../app/routes';
 import {
   getVocabularyFile,
@@ -6,7 +6,10 @@ import {
   updateVocabularyFile,
 } from '../../db/vocabularyRepository';
 import { useUiLanguage } from '../settings/uiLanguage';
-import { preloadVocabularyAudios } from './audioService';
+import {
+  preloadVocabularyAudios,
+  splitChineseAudioText,
+} from './audioService';
 import { parseVocabulary } from './parseVocabulary';
 import { speakChinese, speakDutch } from './speech';
 import type { Folder, VocabularyFileWithEntries } from './types';
@@ -74,6 +77,7 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
   const [rawDraft, setRawDraft] = useState('');
   const [message, setMessage] = useState('');
   const [activeAudioId, setActiveAudioId] = useState<string | null>(null);
+  const nextChinesePartByEntryId = useRef(new Map<string, number>());
   const [listenedEntryIds, setListenedEntryIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -181,6 +185,27 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
     setActiveAudioId((currentAudioId) =>
       currentAudioId === audioId ? null : currentAudioId,
     );
+  }
+
+  function playChineseEntry(entryId: string, chinese: string) {
+    const audioId = `${entryId}:chinese`;
+    const parts = splitChineseAudioText(chinese);
+    const partIndex = nextChinesePartByEntryId.current.get(entryId) ?? 0;
+
+    playEntry(entryId, audioId, () => {
+      const didStart = speakChinese(parts[partIndex % parts.length], {
+        onEnd: () => finishEntryAudio(audioId),
+      });
+
+      if (didStart) {
+        nextChinesePartByEntryId.current.set(
+          entryId,
+          (partIndex + 1) % parts.length,
+        );
+      }
+
+      return didStart;
+    });
   }
 
   function getEntryButtonClass(
@@ -350,12 +375,7 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
                           type="button"
                           aria-pressed={activeAudioId === `${entry.id}:chinese`}
                           onClick={() =>
-                            playEntry(entry.id, `${entry.id}:chinese`, () =>
-                              speakChinese(entry.chinese, {
-                                onEnd: () =>
-                                  finishEntryAudio(`${entry.id}:chinese`),
-                              }),
-                            )
+                            playChineseEntry(entry.id, entry.chinese)
                           }
                         >
                           {entry.chinese}
@@ -372,12 +392,7 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
                           })}
                           aria-pressed={activeAudioId === `${entry.id}:chinese`}
                           onClick={() =>
-                            playEntry(entry.id, `${entry.id}:chinese`, () =>
-                              speakChinese(entry.chinese, {
-                                onEnd: () =>
-                                  finishEntryAudio(`${entry.id}:chinese`),
-                              }),
-                            )
+                            playChineseEntry(entry.id, entry.chinese)
                           }
                         >
                           <SpeakerIcon />

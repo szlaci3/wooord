@@ -1,8 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { routes } from '../../app/routes';
 import { getVocabularyFile } from '../../db/vocabularyRepository';
 import { useUiLanguage } from '../settings/uiLanguage';
-import { preloadVocabularyAudios } from './audioService';
+import {
+  preloadVocabularyAudios,
+  splitChineseAudioText,
+} from './audioService';
 import { speakChinese, speakDutch } from './speech';
 import type { VocabularyEntry, VocabularyFileWithEntries } from './types';
 
@@ -33,26 +36,6 @@ function getBackText(entry: VocabularyEntry, direction: FlashcardDirection) {
   return direction === 'dutch-to-chinese' ? entry.chinese : entry.dutch;
 }
 
-function speakFlashcardText(
-  text: string,
-  direction: FlashcardDirection,
-  onEnd: () => void,
-) {
-  return direction === 'dutch-to-chinese'
-    ? speakDutch(text, { onEnd })
-    : speakChinese(text, { onEnd });
-}
-
-function speakFlashcardAnswer(
-  text: string,
-  direction: FlashcardDirection,
-  onEnd: () => void,
-) {
-  return direction === 'dutch-to-chinese'
-    ? speakChinese(text, { onEnd })
-    : speakDutch(text, { onEnd });
-}
-
 export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
   const { t } = useUiLanguage();
   const [fileData, setFileData] = useState<VocabularyFileWithEntries | null>(
@@ -65,6 +48,7 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
   const [isRevealed, setIsRevealed] = useState(false);
   const [message, setMessage] = useState('');
   const [activeAudioId, setActiveAudioId] = useState<string | null>(null);
+  const nextChinesePartByEntryId = useRef(new Map<string, number>());
 
   useEffect(() => {
     let isMounted = true;
@@ -153,6 +137,25 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
     );
   }
 
+  function playChineseFlashcardAudio(
+    entryId: string,
+    text: string,
+    onEnd: () => void,
+  ) {
+    const parts = splitChineseAudioText(text);
+    const partIndex = nextChinesePartByEntryId.current.get(entryId) ?? 0;
+    const didStart = speakChinese(parts[partIndex % parts.length], { onEnd });
+
+    if (didStart) {
+      nextChinesePartByEntryId.current.set(
+        entryId,
+        (partIndex + 1) % parts.length,
+      );
+    }
+
+    return didStart;
+  }
+
   function playPromptAudio() {
     if (!currentEntry) {
       return;
@@ -161,11 +164,15 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
     const audioId = `${currentEntry.id}:prompt`;
     setActiveAudioId(audioId);
 
-    const didStart = speakFlashcardText(
-      getFrontText(currentEntry, direction),
-      direction,
-      () => finishAudio(audioId),
-    );
+    const onEnd = () => finishAudio(audioId);
+    const didStart =
+      direction === 'dutch-to-chinese'
+        ? speakDutch(currentEntry.dutch, { onEnd })
+        : playChineseFlashcardAudio(
+            currentEntry.id,
+            currentEntry.chinese,
+            onEnd,
+          );
 
     if (!didStart) {
       setActiveAudioId(null);
@@ -180,11 +187,15 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
     const audioId = `${currentEntry.id}:answer`;
     setActiveAudioId(audioId);
 
-    const didStart = speakFlashcardAnswer(
-      getBackText(currentEntry, direction),
-      direction,
-      () => finishAudio(audioId),
-    );
+    const onEnd = () => finishAudio(audioId);
+    const didStart =
+      direction === 'dutch-to-chinese'
+        ? playChineseFlashcardAudio(
+            currentEntry.id,
+            currentEntry.chinese,
+            onEnd,
+          )
+        : speakDutch(currentEntry.dutch, { onEnd });
 
     if (!didStart) {
       setActiveAudioId(null);
