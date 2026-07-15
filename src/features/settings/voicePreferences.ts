@@ -5,7 +5,8 @@ export type AudioSource = 'speechSynthesis' | 'wiktionary';
 export type VoicePreferences = {
   dutchVoiceURI?: string;
   chineseVoiceURI?: string;
-  audioSource?: AudioSource;
+  dutchAudioSource?: AudioSource;
+  chineseAudioSource?: AudioSource;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -36,10 +37,15 @@ export function getVoicePreferences(): VoicePreferences {
       return {};
     }
 
+    const legacyAudioSource = toAudioSource(parsed.audioSource);
+
     return {
       dutchVoiceURI: toOptionalString(parsed.dutchVoiceURI),
       chineseVoiceURI: toOptionalString(parsed.chineseVoiceURI),
-      audioSource: toAudioSource(parsed.audioSource),
+      dutchAudioSource:
+        toAudioSource(parsed.dutchAudioSource) ?? legacyAudioSource,
+      chineseAudioSource:
+        toAudioSource(parsed.chineseAudioSource) ?? legacyAudioSource,
     };
   } catch {
     return {};

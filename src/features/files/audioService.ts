@@ -430,8 +430,12 @@ async function playHtmlAudio(url: string, options: PlayAudioOptions) {
 
 export function preloadLanguageAudio(text: string, language: VoiceLanguage) {
   const preferences = getVoicePreferences();
+  const audioSource =
+    language === 'dutch'
+      ? preferences.dutchAudioSource
+      : preferences.chineseAudioSource;
 
-  if (preferences.audioSource !== 'wiktionary') {
+  if (audioSource !== 'wiktionary') {
     return;
   }
 
@@ -451,12 +455,6 @@ export function preloadLanguageAudio(text: string, language: VoiceLanguage) {
 export function preloadVocabularyAudios(
   entries: Array<{ dutch: string; chinese: string }>,
 ) {
-  const preferences = getVoicePreferences();
-
-  if (preferences.audioSource !== 'wiktionary') {
-    return;
-  }
-
   for (const entry of entries) {
     preloadLanguageAudio(entry.dutch, 'dutch');
     preloadLanguageAudio(entry.chinese, 'chinese');
@@ -501,8 +499,12 @@ export function playLanguageAudio(
   options: PlayAudioOptions = {},
 ) {
   const preferences = getVoicePreferences();
+  const audioSource =
+    language === 'dutch'
+      ? preferences.dutchAudioSource
+      : preferences.chineseAudioSource;
 
-  if (preferences.audioSource === 'wiktionary') {
+  if (audioSource === 'wiktionary') {
     return playWiktionaryOrFallback(text, language, options);
   }
 

@@ -114,16 +114,37 @@ export function SettingsPage() {
           </p>
         ) : null}
 
-        <label className="settings-field" htmlFor="audio-source">
-          <span>{t('audioSource')}</span>
+        <label className="settings-field" htmlFor="dutch-audio-source">
+          <span>{t('dutchAudioSource')}</span>
           <select
-            id="audio-source"
+            id="dutch-audio-source"
             className="select-input"
-            value={preferences.audioSource ?? 'speechSynthesis'}
+            value={preferences.dutchAudioSource ?? 'speechSynthesis'}
             onChange={(event) =>
               setPreferences((currentPreferences) => ({
                 ...currentPreferences,
-                audioSource:
+                dutchAudioSource:
+                  event.target.value === 'wiktionary'
+                    ? 'wiktionary'
+                    : 'speechSynthesis',
+              }))
+            }
+          >
+            <option value="speechSynthesis">{t('speechSynthesisAudio')}</option>
+            <option value="wiktionary">{t('wiktionaryAudio')}</option>
+          </select>
+        </label>
+
+        <label className="settings-field" htmlFor="chinese-audio-source">
+          <span>{t('chineseAudioSource')}</span>
+          <select
+            id="chinese-audio-source"
+            className="select-input"
+            value={preferences.chineseAudioSource ?? 'speechSynthesis'}
+            onChange={(event) =>
+              setPreferences((currentPreferences) => ({
+                ...currentPreferences,
+                chineseAudioSource:
                   event.target.value === 'wiktionary'
                     ? 'wiktionary'
                     : 'speechSynthesis',
