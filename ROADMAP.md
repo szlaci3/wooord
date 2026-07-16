@@ -681,7 +681,7 @@ Acceptance criteria:
 
 ## Milestone 13: Stable Settings Numbers and Chinese Audio Text Handling
 
-Status: Planned.
+Status: Complete.
 
 Goal: make every setting easy to reference and let the user choose whether Chinese audio uses the existing text-splitting behavior.
 

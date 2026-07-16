@@ -3,8 +3,8 @@ import { routes } from '../../app/routes';
 import { getVocabularyFile } from '../../db/vocabularyRepository';
 import { useUiLanguage } from '../settings/uiLanguage';
 import {
+  getChineseAudioTextParts,
   preloadVocabularyAudios,
-  splitChineseAudioText,
 } from './audioService';
 import { speakChinese, speakDutch } from './speech';
 import type { VocabularyEntry, VocabularyFileWithEntries } from './types';
@@ -153,7 +153,7 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
     text: string,
     onEnd: () => void,
   ) => {
-    const parts = splitChineseAudioText(text);
+    const parts = getChineseAudioTextParts(text);
     const partIndex = nextChinesePartByEntryId.current.get(entryId) ?? 0;
     const didStart = speakChinese(parts[partIndex % parts.length], { onEnd });
 

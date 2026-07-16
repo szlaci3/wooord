@@ -90,7 +90,7 @@ export function SettingsPage() {
         </h1>
 
         <label className="settings-field" htmlFor="ui-language">
-          <span>{t('uiLanguage')}</span>
+          <span><span className="setting-number">1.</span> {t('uiLanguage')}</span>
           <select
             id="ui-language"
             className="select-input"
@@ -115,7 +115,7 @@ export function SettingsPage() {
         ) : null}
 
         <label className="settings-field" htmlFor="dutch-audio-source">
-          <span>{t('dutchAudioSource')}</span>
+          <span><span className="setting-number">2.</span> {t('dutchAudioSource')}</span>
           <select
             id="dutch-audio-source"
             className="select-input"
@@ -136,7 +136,7 @@ export function SettingsPage() {
         </label>
 
         <label className="settings-field" htmlFor="chinese-audio-source">
-          <span>{t('chineseAudioSource')}</span>
+          <span><span className="setting-number">3.</span> {t('chineseAudioSource')}</span>
           <select
             id="chinese-audio-source"
             className="select-input"
@@ -157,7 +157,7 @@ export function SettingsPage() {
         </label>
 
         <label className="settings-field" htmlFor="dutch-voice">
-          <span>{t('dutchVoice')}</span>
+          <span><span className="setting-number">4.</span> {t('dutchVoice')}</span>
           <select
             id="dutch-voice"
             className="select-input"
@@ -180,7 +180,7 @@ export function SettingsPage() {
         </label>
 
         <label className="settings-field" htmlFor="chinese-voice">
-          <span>{t('chineseVoice')}</span>
+          <span><span className="setting-number">5.</span> {t('chineseVoice')}</span>
           <select
             id="chinese-voice"
             className="select-input"
@@ -200,6 +200,32 @@ export function SettingsPage() {
             ))}
           </select>
           <small>{t('chineseVoiceHint')}</small>
+        </label>
+
+        <label className="settings-field" htmlFor="chinese-audio-text-splitting">
+          <span>
+            <span className="setting-number">6.</span>{' '}
+            {t('chineseAudioTextHandling')}
+          </span>
+          <select
+            id="chinese-audio-text-splitting"
+            className="select-input"
+            value={
+              preferences.chineseAudioTextSplitting === false
+                ? 'original'
+                : 'split'
+            }
+            onChange={(event) =>
+              setPreferences((currentPreferences) => ({
+                ...currentPreferences,
+                chineseAudioTextSplitting: event.target.value === 'split',
+              }))
+            }
+          >
+            <option value="split">{t('splitChineseAudioText')}</option>
+            <option value="original">{t('originalChineseAudioText')}</option>
+          </select>
+          <small>{t('chineseAudioTextHandlingHint')}</small>
         </label>
 
         <button className="data-action-button" type="submit">

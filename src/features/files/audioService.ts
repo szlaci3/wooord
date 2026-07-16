@@ -94,6 +94,12 @@ export function splitChineseAudioText(text: string) {
   return parts.length > 0 ? parts : [text];
 }
 
+export function getChineseAudioTextParts(text: string) {
+  const { chineseAudioTextSplitting = true } = getVoicePreferences();
+
+  return chineseAudioTextSplitting ? splitChineseAudioText(text) : [text];
+}
+
 function getWiktionaryCacheKey(text: string, language: VoiceLanguage) {
   return `${language}:${text.toLocaleLowerCase()}`;
 }
@@ -466,7 +472,7 @@ export function preloadVocabularyAudios(
 ) {
   for (const entry of entries) {
     preloadLanguageAudio(entry.dutch, 'dutch');
-    for (const chinesePart of splitChineseAudioText(entry.chinese)) {
+    for (const chinesePart of getChineseAudioTextParts(entry.chinese)) {
       preloadLanguageAudio(chinesePart, 'chinese');
     }
   }

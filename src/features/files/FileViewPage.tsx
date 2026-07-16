@@ -7,8 +7,8 @@ import {
 } from '../../db/vocabularyRepository';
 import { useUiLanguage } from '../settings/uiLanguage';
 import {
+  getChineseAudioTextParts,
   preloadVocabularyAudios,
-  splitChineseAudioText,
 } from './audioService';
 import { parseVocabulary } from './parseVocabulary';
 import { speakChinese, speakDutch } from './speech';
@@ -189,7 +189,7 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
 
   function playChineseEntry(entryId: string, chinese: string) {
     const audioId = `${entryId}:chinese`;
-    const parts = splitChineseAudioText(chinese);
+    const parts = getChineseAudioTextParts(chinese);
     const partIndex = nextChinesePartByEntryId.current.get(entryId) ?? 0;
 
     playEntry(entryId, audioId, () => {

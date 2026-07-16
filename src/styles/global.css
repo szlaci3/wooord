@@ -505,6 +505,11 @@ h2 {
   font-weight: 800;
 }
 
+.settings-field .setting-number {
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
+}
+
 .settings-field small {
   color: var(--color-text-muted);
 }

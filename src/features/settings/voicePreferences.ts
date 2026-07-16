@@ -7,6 +7,7 @@ export type VoicePreferences = {
   chineseVoiceURI?: string;
   dutchAudioSource?: AudioSource;
   chineseAudioSource?: AudioSource;
+  chineseAudioTextSplitting?: boolean;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -46,6 +47,10 @@ export function getVoicePreferences(): VoicePreferences {
         toAudioSource(parsed.dutchAudioSource) ?? legacyAudioSource,
       chineseAudioSource:
         toAudioSource(parsed.chineseAudioSource) ?? legacyAudioSource,
+      chineseAudioTextSplitting:
+        typeof parsed.chineseAudioTextSplitting === 'boolean'
+          ? parsed.chineseAudioTextSplitting
+          : true,
     };
   } catch {
     return {};

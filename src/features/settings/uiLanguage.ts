@@ -95,6 +95,11 @@ const translations = {
       '当浏览器提供 nl-BE 和 nl-NL 等荷兰语语音时，它们会显示在这里。',
     chineseVoiceHint:
       '当浏览器提供 zh-TW 等台湾语音时，它们可以在这里选择。',
+    chineseAudioTextHandling: '中文音频文本处理',
+    splitChineseAudioText: '按中文逗号分段播放',
+    originalChineseAudioText: '播放原始完整文本',
+    chineseAudioTextHandlingHint:
+      '分段模式会在每次播放时依次播放中文逗号分隔的部分。',
     saveSettings: '保存设置',
     settingsSaved: '设置已保存。',
   },
@@ -185,6 +190,11 @@ const translations = {
       'Dutch voices such as nl-BE and nl-NL appear when your browser exposes them.',
     chineseVoiceHint:
       'Taiwan voices such as zh-TW are selectable when your browser exposes them.',
+    chineseAudioTextHandling: 'Chinese audio text handling',
+    splitChineseAudioText: 'Split at Chinese commas',
+    originalChineseAudioText: 'Play the original full text',
+    chineseAudioTextHandlingHint:
+      'Split mode cycles through parts separated by Chinese commas on each play.',
     saveSettings: 'Save settings',
     settingsSaved: 'Settings saved.',
   },
