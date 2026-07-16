@@ -409,6 +409,15 @@ Do not block the user with errors if audio is unavailable.
 
 A small visual active/listening state is useful but not required for the first version.
 
+The Settings page must show a visible, stable number before every setting so the user can refer to settings unambiguously. Once assigned, a setting number must not change when settings are added, removed, or reordered.
+
+Settings must include a persistent Chinese audio text handling option:
+
+* enabled: process Chinese text with `splitChineseAudioText` before playback
+* disabled: play the original Chinese text without splitting
+
+All Chinese playback flows must honor this setting. Existing installations without a saved value should default to enabled so current playback behavior is preserved.
+
 ---
 
 ## Parsing Rules
@@ -554,6 +563,8 @@ This is especially useful for Netlify-style static deployment.
 ## Implementation Rules for Codex
 
 Work milestone by milestone.
+
+Manual code changes are authoritative, even when instruction or planning files do not yet reflect them. Before implementing a milestone, inspect the current code and preserve intentional behavior already present unless the user explicitly asks to change it.
 
 Do not overbuild.
 

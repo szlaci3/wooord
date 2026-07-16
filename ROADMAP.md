@@ -10,6 +10,8 @@ Avoid large unfinished rewrites.
 
 Prefer simple working features over complex abstractions.
 
+Manual code changes are authoritative, even when this roadmap has not yet caught up. Inspect the current implementation before starting a milestone, and preserve intentional current behavior unless the user explicitly requests otherwise.
+
 Codex should stop after each milestone and wait for the next instruction.
 
 ---
@@ -674,6 +676,98 @@ Acceptance criteria:
 - Taiwan Chinese voices are selectable when the browser exposes them
 - Dutch words in vocabulary entries are listenable
 - app remains runnable
+
+---
+
+## Milestone 13: Stable Settings Numbers and Chinese Audio Text Handling
+
+Status: Planned.
+
+Goal: make every setting easy to reference and let the user choose whether Chinese audio uses the existing text-splitting behavior.
+
+Build in one implementation pass:
+
+- Show a visible setting number before every setting label in the Settings UI.
+- Treat setting numbers as stable identifiers: do not derive them from array position and do not renumber existing settings when settings are later added, removed, or reordered.
+- Assign the current settings these stable numbers:
+  - `1` — UI language
+  - `2` — Dutch audio source
+  - `3` — Chinese audio source
+  - `4` — Dutch voice
+  - `5` — Chinese voice
+- Add setting `6` — Chinese audio text splitting.
+- Persist setting `6` with the existing audio/voice preferences in browser `localStorage`.
+- Default setting `6` to enabled when no saved value exists, preserving the current behavior for existing users.
+- When enabled, Chinese playback must process the original text with `splitChineseAudioText` and continue the current per-entry cycling behavior.
+- When disabled, Chinese playback must pass the original, unsplit Chinese text through the audio playback flow.
+- Apply the setting consistently to Chinese playback in both the opened file view and flashcards.
+- Make Chinese audio preloading follow the same enabled/disabled text choice so Wiktionary lookup/cache preparation matches the text that will be played.
+- Add localized Chinese and English labels/help text for the new setting and accessible UI semantics for its control.
+
+Implementation notes from the current code:
+
+- `src/features/settings/SettingsPage.tsx` currently renders five settings in the numbering order above.
+- `src/features/settings/voicePreferences.ts` owns the `wooord.voicePreferences` local-storage object and already tolerates missing preference fields; extend that shape without discarding existing saved fields.
+- `splitChineseAudioText` currently splits on the Chinese comma `，` and returns trimmed, non-empty parts (or the original text as fallback).
+- `src/features/files/FileViewPage.tsx` and `src/features/files/FlashcardsPage.tsx` call `splitChineseAudioText` unconditionally and keep a per-entry next-part index. Both call sites must honor setting `6`.
+- `preloadVocabularyAudios` in `src/features/files/audioService.ts` also splits Chinese text unconditionally; it must honor the same setting.
+- The underlying `speakChinese`/`playLanguageAudio` path receives the text chosen by those callers and supports either browser speech or Wiktionary-with-browser fallback.
+
+Acceptance criteria:
+
+- all six Settings controls display their assigned numbers visibly
+- the assigned numbers remain fixed in source rather than changing with render order
+- the Chinese audio text splitting choice persists after refresh
+- users with no saved choice retain the current split-and-cycle behavior
+- enabled mode uses `splitChineseAudioText` for Chinese playback and preloading
+- disabled mode plays and preloads the original Chinese text without splitting
+- file-view and flashcard Chinese playback both follow the saved choice
+- existing UI language, audio-source, and voice preferences continue to load and save
+- the app remains mobile-friendly, accessible, and runnable
+
+Stop after this milestone.
+
+---
+
+## Milestone 14: Automatic Flashcard Prompt Audio
+
+Status: Complete.
+
+Goal: automatically play the visible prompt when a flashcard is presented while keeping answer playback user-controlled.
+
+Build:
+
+- In Flashcard mode, automatically start the prompt-side audio whenever a card's prompt is displayed.
+- Auto-play the first card's prompt after the flashcard file has loaded.
+- Auto-play the new prompt after moving to the previous or next card.
+- Auto-play the current card's new prompt after changing flashcard direction.
+- Use Dutch audio for a Dutch prompt and Chinese audio for a Chinese prompt.
+- Chinese prompt auto-play must follow the Chinese audio text handling preference from Milestone 13.
+- Keep the existing prompt audio button visible and usable so the user can replay the prompt manually.
+- Do not automatically play the answer when it is revealed or otherwise displayed.
+- Keep the existing answer audio button available for manual playback.
+- Avoid duplicate automatic playback caused by React rerenders or unrelated state changes.
+- Preserve the existing active-audio state and graceful behavior when browser audio is unavailable.
+
+Implementation notes from the current code:
+
+- `src/features/files/FlashcardsPage.tsx` already has `playPromptAudio` and `playAnswerAudio` paths and tracks the current card, direction, reveal state, and active audio ID.
+- Automatic playback should be tied to a meaningful prompt presentation change, not to every render.
+- Navigation wraps or exits through the existing end-of-deck confirmation flow; only a card that is actually displayed should trigger prompt audio.
+
+Acceptance criteria:
+
+- the first displayed flashcard prompt plays automatically
+- each newly displayed previous or next prompt plays automatically
+- changing direction automatically plays the newly displayed prompt in the correct language
+- revealing the answer never starts answer audio automatically
+- prompt and answer audio buttons remain visible and work manually
+- Chinese prompt playback follows the saved split/original-text preference
+- rerenders do not cause repeated or overlapping unintended auto-play
+- audio unavailability does not block flashcard study
+- the app remains mobile-friendly and runnable
+
+Stop after this milestone.
 
 ---
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { routes } from '../../app/routes';
 import { getVocabularyFile } from '../../db/vocabularyRepository';
 import { useUiLanguage } from '../settings/uiLanguage';
@@ -43,12 +43,15 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [direction, setDirection] =
-    useState<FlashcardDirection>('dutch-to-chinese');
+    useState<FlashcardDirection>('chinese-to-dutch');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isRevealed, setIsRevealed] = useState(false);
+  const [promptPresentationSequence, setPromptPresentationSequence] =
+    useState(0);
   const [message, setMessage] = useState('');
   const [activeAudioId, setActiveAudioId] = useState<string | null>(null);
   const nextChinesePartByEntryId = useRef(new Map<string, number>());
+  const lastAutoPlayedPromptKey = useRef<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -93,9 +96,14 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
   }, [currentIndex, entries.length]);
 
   function changeDirection(nextDirection: FlashcardDirection) {
+    if (nextDirection === direction) {
+      return;
+    }
+
     setDirection(nextDirection);
     setIsRevealed(false);
     setActiveAudioId(null);
+    setPromptPresentationSequence((sequence) => sequence + 1);
   }
 
   function goToPreviousCard() {
@@ -104,6 +112,7 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
     );
     setIsRevealed(false);
     setActiveAudioId(null);
+    setPromptPresentationSequence((sequence) => sequence + 1);
   }
 
   function goToNextCard() {
@@ -119,6 +128,7 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
         setCurrentIndex(0);
         setIsRevealed(false);
         setActiveAudioId(null);
+        setPromptPresentationSequence((sequence) => sequence + 1);
       } else if (fileData) {
         window.location.href = routes.file(fileData.file.id);
       }
@@ -129,19 +139,20 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
     setCurrentIndex((index) => index + 1);
     setIsRevealed(false);
     setActiveAudioId(null);
+    setPromptPresentationSequence((sequence) => sequence + 1);
   }
 
-  function finishAudio(audioId: string) {
+  const finishAudio = useCallback((audioId: string) => {
     setActiveAudioId((currentAudioId) =>
       currentAudioId === audioId ? null : currentAudioId,
     );
-  }
+  }, []);
 
-  function playChineseFlashcardAudio(
+  const playChineseFlashcardAudio = useCallback((
     entryId: string,
     text: string,
     onEnd: () => void,
-  ) {
+  ) => {
     const parts = splitChineseAudioText(text);
     const partIndex = nextChinesePartByEntryId.current.get(entryId) ?? 0;
     const didStart = speakChinese(parts[partIndex % parts.length], { onEnd });
@@ -154,9 +165,9 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
     }
 
     return didStart;
-  }
+  }, []);
 
-  function playPromptAudio() {
+  const playPromptAudio = useCallback(() => {
     if (!currentEntry) {
       return;
     }
@@ -177,7 +188,33 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
     if (!didStart) {
       setActiveAudioId(null);
     }
-  }
+  }, [currentEntry, direction, finishAudio, playChineseFlashcardAudio]);
+
+  useEffect(() => {
+    if (!currentEntry) {
+      return;
+    }
+
+    const promptKey = [
+      fileId,
+      currentEntry.id,
+      direction,
+      promptPresentationSequence,
+    ].join(':');
+
+    if (lastAutoPlayedPromptKey.current === promptKey) {
+      return;
+    }
+
+    lastAutoPlayedPromptKey.current = promptKey;
+    playPromptAudio();
+  }, [
+    currentEntry,
+    direction,
+    fileId,
+    playPromptAudio,
+    promptPresentationSequence,
+  ]);
 
   function playAnswerAudio() {
     if (!currentEntry) {
