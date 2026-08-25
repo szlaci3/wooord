@@ -15,7 +15,7 @@ export function parseVocabulary(rawText: string): ParseVocabularyResult {
   const skippedLines: string[] = [];
 
   for (const rawLine of rawText.split(/\r?\n/u)) {
-    const line = rawLine.trim();
+    const line = rawLine.replace(/(?:—|&mdash;?)/gu, '').trim();
 
     if (!line) {
       continue;
