@@ -95,7 +95,17 @@ export async function createVocabularyFile(
 }
 
 export async function listVocabularyFiles(): Promise<VocabularyFile[]> {
-  return db.files.orderBy('createdAt').reverse().toArray();
+  const files = await db.files.orderBy('createdAt').reverse().toArray();
+  // Unordered (including newly created) decks stay at the top, newest first.
+  return files.sort((a, b) => (a.sortOrder ?? -1) - (b.sortOrder ?? -1));
+}
+
+export async function saveVocabularyFileOrder(fileIds: string[]): Promise<void> {
+  await db.transaction('rw', db.files, async () => {
+    for (const [sortOrder, id] of fileIds.entries()) {
+      await db.files.update(id, { sortOrder });
+    }
+  });
 }
 
 export async function listVocabularyFilesByFolder(

@@ -8,6 +8,7 @@ export type Folder = {
 export type VocabularyFile = {
   id: string;
   title: string;
+  sortOrder?: number;
   folderId?: string | null;
   createdAt: string;
   updatedAt: string;

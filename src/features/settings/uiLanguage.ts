@@ -27,6 +27,10 @@ const translations = {
     noFiles:
       '还没有词汇文件。创建一个文件，开始建立你的本地学习列表。',
     savedFilesLoadError: '无法加载已保存的文件。',
+    reorderFile: ({ title }) => `调整顺序：${title}`,
+    reorderFilesHint: '拖动手柄调整顺序，或聚焦手柄后使用上下方向键。',
+    fileOrderSaved: '文件顺序已保存。',
+    fileOrderSaveError: '无法保存文件顺序。已恢复原顺序，请重试。',
     addFolderName: '保存前请输入文件夹名称。',
     folderCreateError: '无法创建文件夹。请重试。',
     file: '文件',
@@ -120,6 +124,10 @@ const translations = {
     noFiles:
       'No vocabulary files yet. Create a file to start building your local study list.',
     savedFilesLoadError: 'Saved files could not be loaded.',
+    reorderFile: ({ title }) => `Reorder: ${title}`,
+    reorderFilesHint: 'Drag a handle to reorder, or focus it and use the Up and Down arrow keys.',
+    fileOrderSaved: 'File order saved.',
+    fileOrderSaveError: 'The file order could not be saved. The previous order was restored. Try again.',
     addFolderName: 'Add a folder name before saving.',
     folderCreateError: 'The folder could not be created. Try again.',
     file: 'File',

@@ -72,6 +72,10 @@ function isVocabularyFile(value: unknown): value is VocabularyFile {
     isRecord(value) &&
     isString(value.id) &&
     isString(value.title) &&
+    (value.sortOrder === undefined ||
+      (typeof value.sortOrder === 'number' &&
+        Number.isSafeInteger(value.sortOrder) &&
+        value.sortOrder >= 0)) &&
     (value.folderId === undefined ||
       value.folderId === null ||
       isString(value.folderId)) &&
