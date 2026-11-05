@@ -133,7 +133,6 @@ export function FileListPage() {
             {folders.map((folder) => (
               <li key={folder.id}>
                 <a className="folder-list-link" href={routes.folder(folder.id)}>
-                  <span>{folder.name}</span>
                   <small>{formatDisplayDate(folder.updatedAt)}</small>
                 </a>
               </li>
