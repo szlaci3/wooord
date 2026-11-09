@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { routes } from '../../app/routes';
 import {
+  deleteVocabularyFile,
   getVocabularyFile,
   listFolders,
   updateVocabularyFile,
@@ -71,6 +72,7 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [titleDraft, setTitleDraft] = useState('');
   const [folderDraft, setFolderDraft] = useState('');
@@ -125,7 +127,7 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
   }
 
   async function saveEdit() {
-    if (!fileData || isSaving) {
+    if (!fileData || isSaving || isDeleting) {
       return;
     }
 
@@ -161,6 +163,27 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
       setMessage(t('fileSaveError'));
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function deleteDeck() {
+    if (!fileData || isSaving || isDeleting) {
+      return;
+    }
+
+    if (!window.confirm(t('deleteDeckConfirm', { title: fileData.file.title }))) {
+      return;
+    }
+
+    setIsDeleting(true);
+    setMessage('');
+
+    try {
+      await deleteVocabularyFile(fileData.file.id);
+      window.location.replace(routes.home);
+    } catch {
+      setMessage(t('deleteDeckError'));
+      setIsDeleting(false);
     }
   }
 
@@ -259,14 +282,23 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
                 className="icon-button icon-button-secondary"
                 type="button"
                 aria-label={isEditing ? t('saveFile') : t('editFile')}
-                disabled={isSaving}
+                disabled={isSaving || isDeleting}
                 onClick={isEditing ? saveEdit : enterEditMode}
               >
                 {isEditing ? <SaveIcon /> : <EditIcon />}
               </button>
             </div>
 
-            {message ? <p className="form-message">{message}</p> : null}
+            <button
+              className="data-action-button data-action-danger"
+              type="button"
+              disabled={isSaving || isDeleting}
+              onClick={deleteDeck}
+            >
+              {isDeleting ? t('deletingDeck') : t('deleteDeck')}
+            </button>
+
+            {message ? <p className="form-message" role="alert">{message}</p> : null}
 
             {isEditing ? (
               <div className="edit-fields">

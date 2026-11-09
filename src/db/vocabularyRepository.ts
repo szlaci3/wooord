@@ -135,6 +135,13 @@ export async function getVocabularyFile(
   return { file, entries };
 }
 
+export async function deleteVocabularyFile(fileId: string): Promise<void> {
+  await db.transaction('rw', db.files, db.entries, async () => {
+    await db.entries.where('fileId').equals(fileId).delete();
+    await db.files.delete(fileId);
+  });
+}
+
 export async function updateVocabularyFile(
   fileId: string,
   input: UpdateVocabularyFileInput,
