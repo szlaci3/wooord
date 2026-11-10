@@ -183,3 +183,24 @@ export async function updateVocabularyFile(
     return { file: updatedFile, entries };
   });
 }
+
+export async function updateVocabularyPair(fileId: string, entryId: string, dutch: string, chinese: string) {
+  return db.transaction('rw', db.files, db.entries, async () => {
+    const entry = await db.entries.get(entryId);
+    if (!entry || entry.fileId !== fileId || !dutch.trim() || !chinese.trim()) throw new Error('Invalid card');
+    await db.entries.update(entryId, { dutch, chinese });
+    await db.files.update(fileId, { updatedAt: createTimestamp() });
+    return getVocabularyFile(fileId);
+  });
+}
+
+
+export async function deleteVocabularyPair(fileId: string, entryId: string) {
+  return db.transaction('rw', db.files, db.entries, async () => {
+    const entry = await db.entries.get(entryId);
+    if (!entry || entry.fileId !== fileId) throw new Error('Card not found.');
+    await db.entries.delete(entryId);
+    await db.files.update(fileId, { updatedAt: createTimestamp() });
+    return getVocabularyFile(fileId);
+  });
+}

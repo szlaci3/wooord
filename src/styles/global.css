@@ -777,3 +777,12 @@ h2 {
     font-size: 2.25rem;
   }
 }
+
+.review-controls { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 46px; }
+.card-editor { width: min(440px, calc(100% - 32px)); max-height: 90dvh; overflow: auto; padding: 20px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-surface); color: var(--color-text); }
+.card-editor::backdrop { background: #0009; }
+.card-editor label { display: grid; gap: 8px; margin-bottom: 16px; }
+.card-editor textarea { width: 100%; min-height: 100px; padding: 10px; background: var(--color-bg); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 8px; font: inherit; }
+.card-editor-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.card-editor-actions button { min-height: 44px; padding: 8px 14px; cursor: pointer; }
+.card-editor-actions button:first-child { color: var(--color-danger); margin-right: auto; }

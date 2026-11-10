@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { routes } from '../../app/routes';
-import { getVocabularyFile } from '../../db/vocabularyRepository';
+import { deleteVocabularyPair, updateVocabularyPair, getVocabularyFile } from '../../db/vocabularyRepository';
 import { useUiLanguage } from '../settings/uiLanguage';
 import {
   getChineseAudioTextParts,
@@ -37,7 +37,8 @@ function getBackText(entry: VocabularyEntry, direction: FlashcardDirection) {
 }
 
 export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
-  const { t } = useUiLanguage();
+  const { t, language } = useUiLanguage();
+  const label = (en: string, zh: string) => language === "zh" ? zh : en;
   const [fileData, setFileData] = useState<VocabularyFileWithEntries | null>(
     null,
   );
@@ -85,6 +86,15 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
     };
   }, [fileId, t]);
 
+  const [editing, setEditing] = useState(false);
+  const [dutch, setDutch] = useState('');
+  const [chinese, setChinese] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState('');
+  const dialog = useRef<HTMLDialogElement>(null);
+  const busy = useRef(false);
+  useEffect(() => { if (editing) dialog.current?.showModal(); }, [editing]);
+
   const entries = fileData?.entries ?? [];
   const currentEntry = entries[currentIndex] ?? null;
   const progressText = useMemo(() => {
@@ -94,6 +104,26 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
 
     return `${currentIndex + 1} / ${entries.length}`;
   }, [currentIndex, entries.length]);
+
+  async function saveCard(remove = false) {
+    if (!currentEntry || busy.current) return;
+    if (remove && !window.confirm(label('Delete this card? This cannot be undone.', '删除这张卡片？此操作无法撤销。'))) return;
+    busy.current = true; setSaving(true); setEditError('');
+    try {
+      const updated = remove
+        ? await deleteVocabularyPair(fileId, currentEntry.id)
+        : await updateVocabularyPair(fileId, currentEntry.id, dutch.trim(), chinese.trim());
+      if (!updated) throw new Error('Missing deck');
+      setFileData(updated);
+      setCurrentIndex(index => Math.min(index, Math.max(0, updated.entries.length - 1)));
+      nextChinesePartByEntryId.current.delete(currentEntry.id);
+      setActiveAudioId(null); setIsRevealed(false);
+      setPromptPresentationSequence(sequence => sequence + 1);
+      setEditing(false);
+    } catch {
+      setEditError(label('Could not save the card. Please try again.', '无法保存卡片，请重试。'));
+    } finally { busy.current = false; setSaving(false); }
+  }
 
   function changeDirection(nextDirection: FlashcardDirection) {
     if (nextDirection === direction) {
@@ -265,7 +295,7 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
 
             {message ? <p className="form-message">{message}</p> : null}
 
-            <div className="segmented-control" aria-label={t('flashcardDirection')}>
+            <div className="segmented-control review-controls" aria-label={t('flashcardDirection')}>
               <button
                 className={
                   direction === 'dutch-to-chinese'
@@ -287,6 +317,11 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
                 onClick={() => changeDirection('chinese-to-dutch')}
               >
                 {t('chinese')}
+              </button>
+              <button className="segment-button" type="button" aria-label={label('Edit card', '编辑卡片')} onClick={() => {
+                setDutch(currentEntry.dutch); setChinese(currentEntry.chinese); setEditError(''); setEditing(true);
+              }}>
+                <svg className="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5-12 12H4v-5L16 3Zm0 3L6 16v2h2L18 8l-2-2Z" /></svg>
               </button>
             </div>
 
@@ -370,6 +405,19 @@ export function FlashcardsPage({ fileId }: FlashcardsPageProps) {
           <p className="empty-state">{t('fileNotFound')}</p>
         )}
       </section>
+      {editing && <dialog ref={dialog} className="card-editor" aria-labelledby="card-editor-title" onCancel={event => { if (saving) event.preventDefault(); else setEditing(false); }}>
+        <form onSubmit={event => { event.preventDefault(); void saveCard(); }}>
+          <h2 id="card-editor-title">{label('Edit card', '编辑卡片')}</h2>
+          <label>{t('dutch')}<textarea autoFocus required value={dutch} onChange={event => setDutch(event.target.value)} /></label>
+          <label>{t('chinese')}<textarea required value={chinese} onChange={event => setChinese(event.target.value)} /></label>
+          {editError && <p role="alert">{editError}</p>}
+          <div className="card-editor-actions">
+            <button type="button" className="secondary-action" disabled={saving} onClick={() => void saveCard(true)}>{label('Delete card', '删除卡片')}</button>
+            <button type="button" className="secondary-action" disabled={saving} onClick={() => setEditing(false)}>{label('Cancel', '取消')}</button>
+            <button type="submit" className="primary-action" disabled={saving || !dutch.trim() || !chinese.trim()}>{label('Save', '保存')}</button>
+          </div>
+        </form>
+      </dialog>}
     </main>
   );
 }
