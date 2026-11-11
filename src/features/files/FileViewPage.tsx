@@ -289,14 +289,24 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
               </button>
             </div>
 
-            <button
-              className="data-action-button data-action-danger"
-              type="button"
-              disabled={isSaving || isDeleting}
-              onClick={deleteDeck}
-            >
-              {isDeleting ? t('deletingDeck') : t('deleteDeck')}
-            </button>
+            <div className="deck-action-row">
+              <button
+                className="data-action-button data-action-danger"
+                type="button"
+                disabled={isSaving || isDeleting}
+                onClick={deleteDeck}
+              >
+                {isDeleting ? t('deletingDeck') : t('deleteDeck')}
+              </button>
+              {!isEditing && (
+                <a
+                  className="secondary-action file-study-link"
+                  href={routes.flashcards(fileData.file.id)}
+                >
+                  {t('studyFlashcards')}
+                </a>
+              )}
+            </div>
 
             {message ? <p className="form-message" role="alert">{message}</p> : null}
 
@@ -342,13 +352,6 @@ export function FileViewPage({ fileId }: FileViewPageProps) {
               </div>
             ) : (
               <>
-                <a
-                  className="secondary-action file-study-link"
-                  href={routes.flashcards(fileData.file.id)}
-                >
-                  {t('studyFlashcards')}
-                </a>
-
                 <ol className="entry-list">
                   {fileData.entries.map((entry) => (
                     <li key={entry.id} className="entry-item">

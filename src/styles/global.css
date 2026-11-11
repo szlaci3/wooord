@@ -393,11 +393,6 @@ h2 {
   color: var(--color-success);
 }
 
-.file-study-link {
-  margin-top: 18px;
-  padding: 0 12px;
-}
-
 .flashcard-heading {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -556,6 +551,21 @@ h2 {
   border: 1px solid var(--color-border);
   background: var(--color-primary-soft);
   color: var(--color-text);
+}
+
+.deck-action-row {
+  display: flex;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.deck-action-row > * {
+  margin-right: 12px;
+}
+
+.file-study-link {
+  padding: 0 12px;
+  text-align: center;
 }
 
 .content-section {
